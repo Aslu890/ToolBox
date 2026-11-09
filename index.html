@@ -1,0 +1,1117 @@
+<!doctype html><html lang="en"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>ToolBox</title>
+<meta name="description" content="ToolBox: free PDF, image, text, calculator and developer tools that run in your browser.">
+<meta name="theme-color" content="#5558ee">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ToolBox">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="application-name" content="ToolBox">
+<meta name="format-detection" content="telephone=no">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+.no-ai .ai,.no-ai .ai-b,.no-ai #askbtn,.no-ai #fab,.no-ai #drawer,.no-ai #aif{display:none!important}
+html{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body{overscroll-behavior-y:none}
+#install-toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:99;max-width:min(92vw,420px);background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--shadow);padding:12px 16px;font:500 .95rem/1.4 var(--font)}
+</style>
+</head><body>
+<style>
+/* Layout: one column. Home is a searchable card grid (Pinned, Recent, then the sorted list). Each tool opens as a single panel. Claude lives in a right-hand drawer reachable from every page. */
+:root{
+ --bg:#f5f6fb;--card:#ffffff;--tx:#161a2b;--mut:#5d6383;--bd:#e0e3f0;
+ --ac:#5558ee;--ac2:#8a5cf6;--on-ac:#ffffff;--ac-soft:#eceeff;
+ --ok:#12794a;--err:#c42f2f;--warn:#c27a00;--shadow:0 12px 32px rgba(22,26,43,.14);
+ --font:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+ --head:"Space Grotesk",Inter,system-ui,sans-serif;
+ --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+ color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1220;--card:#181c30;--tx:#eceefa;--mut:#a3a9cb;--bd:#2a2f4a;--ac:#8c8cff;--ac2:#b08cff;--on-ac:#0f1220;--ac-soft:#232850;--ok:#4cd69a;--err:#ff8080;--warn:#f0b25a;--shadow:0 12px 32px rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1220;--card:#181c30;--tx:#eceefa;--mut:#a3a9cb;--bd:#2a2f4a;--ac:#8c8cff;--ac2:#b08cff;--on-ac:#0f1220;--ac-soft:#232850;--ok:#4cd69a;--err:#ff8080;--warn:#f0b25a;--shadow:0 12px 32px rgba(0,0,0,.55);color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 var(--font)}
+h1,h2,h3{font-family:var(--head);letter-spacing:-.02em}
+button,select,input,textarea{font:inherit;font-size:1rem;color:inherit}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+nav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:16px}
+.logo{font:800 1.3rem var(--head);letter-spacing:-.02em;cursor:pointer;background:none;border:0;padding:0}
+.logo span,.hero h1 span{background:linear-gradient(135deg,var(--ac),var(--ac2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.navr{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
+.btn{background:var(--ac);color:var(--on-ac);border:1px solid transparent;border-radius:10px;padding:9px 16px;cursor:pointer;font-weight:600;line-height:1.3}
+.btn:hover{filter:brightness(1.08)}
+.btn.sec{background:transparent;color:var(--tx);border-color:var(--bd)}
+.btn.sec:hover{background:var(--ac-soft);filter:none}
+.btn.ai{color:var(--ac);border-color:var(--ac)}
+.btn.sm{padding:6px 11px;font-size:.88rem}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn.on{background:var(--ac);color:var(--on-ac);border-color:var(--ac)}
+
+textarea,input[type=text],input[type=number],input[type=date],input[type=file],input[type=search],select{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px 12px}
+textarea:focus,input:focus,select:focus{border-color:var(--ac)}
+textarea{min-height:150px;resize:vertical;font-family:var(--mono);font-size:.92rem}
+textarea.sans{font-family:var(--font);font-size:1rem}
+input[type=range]{width:100%;accent-color:var(--ac)}
+input[type=color]{width:100%;height:44px;padding:2px;border:1px solid var(--bd);border-radius:10px;background:var(--bg)}
+input[type=checkbox]{accent-color:var(--ac)}
+
+.hero{text-align:center;padding-top:26px;padding-bottom:16px}
+.hero h1{font-size:clamp(2rem,6vw,3.1rem);line-height:1.1;margin:0 0 12px;text-wrap:balance}
+.hero p{color:var(--mut);max-width:580px;margin:0 auto 20px}
+#q{max-width:480px;border-radius:14px;padding:13px 18px;background:var(--card)}
+.kbd{font:500 .75rem var(--mono);border:1px solid var(--bd);border-radius:6px;padding:1px 6px;color:var(--mut)}
+.chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0 8px}
+.chip{border:1px solid var(--bd);background:var(--card);border-radius:99px;padding:5px 14px;cursor:pointer;font-size:.9rem;color:var(--mut)}
+.chip small{opacity:.8;margin-left:4px}
+.chip.on{background:var(--ac);border-color:var(--ac);color:var(--on-ac)}
+.toolbar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-top:8px}
+.toolbar label{display:flex;gap:8px;align-items:center;color:var(--mut);font-size:.9rem}
+.toolbar select{width:auto;padding:6px 10px}
+.toolbar .count{color:var(--mut);font-size:.9rem}
+.sec-h{display:flex;align-items:baseline;gap:8px;margin:22px 0 10px}
+.sec-h h2{margin:0;font-size:1.1rem}
+.sec-h span{color:var(--mut);font-size:.85rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:14px;padding-bottom:8px}
+.cell{position:relative;min-width:0}
+.card{display:block;height:100%;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px 16px 14px;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--ac)}
+@media (prefers-reduced-motion:no-preference){.card{transition:transform .15s,border-color .15s}.card:hover{transform:translateY(-3px)}}
+.ic{font-size:1.6rem;line-height:1}
+.card h3{margin:10px 0 4px;font-size:1.05rem;padding-right:30px}
+.card p{margin:0;color:var(--mut);font-size:.9rem}
+.meta{display:flex;gap:8px;align-items:center;margin-top:10px}
+.tag{font-size:.72rem;color:var(--ac);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.ai-b{font-size:.7rem;font-weight:700;background:var(--ac-soft);color:var(--ac);border-radius:99px;padding:1px 8px}
+.fav{position:absolute;top:10px;right:10px;width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:var(--mut);cursor:pointer;font-size:1.15rem;line-height:1}
+.fav:hover{background:var(--ac-soft)}
+.fav.on{color:var(--warn)}
+.empty{text-align:center;color:var(--mut);padding:30px 0;display:flex;flex-direction:column;gap:12px;align-items:center}
+.empty.sm{padding:12px 0;font-size:.9rem}
+
+.thead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.thead .grow{flex:1}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:22px;margin-bottom:24px;min-width:0}
+.panel h2{margin:0 0 4px}
+.panel .sub{color:var(--mut);margin:0 0 16px}
+.fld{margin-bottom:10px;min-width:0}
+.fld label{display:block;font-size:.85rem;color:var(--mut);margin-bottom:4px}
+.fld label input,.fld label select{margin-top:4px;color:var(--tx)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;align-items:flex-end}
+.row>*{flex:1 1 130px;min-width:0}
+.row .btn{flex:0 0 auto}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:12px}
+.stat{background:var(--bg);border-radius:12px;padding:12px;text-align:center}
+.stat b{display:block;font-size:1.4rem;font-family:var(--head)}
+.stat small{color:var(--mut)}
+.msg{min-height:1.4em;margin-top:6px;font-size:.9rem;color:var(--ok)}
+.msg.e{color:var(--err)}
+.sw{height:90px;border-radius:12px;border:1px solid var(--bd);margin:12px 0}
+.out{background:var(--bg);border-radius:10px;padding:12px;margin:8px 0;overflow-wrap:anywhere}
+.out.mono,.mono{font-family:var(--mono);word-break:break-all}
+.info{color:var(--mut);font-size:.9rem}
+label.ck{display:inline-flex;gap:6px;align-items:center;margin-right:12px}
+.split{height:10px;border-radius:99px;background:var(--warn);overflow:hidden;margin:10px 0 4px}
+.split i{display:block;height:100%;background:var(--ac)}
+.shades{display:flex;gap:4px;margin-top:8px}
+.shades button{flex:1;height:38px;border:1px solid var(--bd);border-radius:8px;cursor:pointer}
+.big{font:700 clamp(2.4rem,12vw,4rem) var(--mono);text-align:center}
+
+.rich{line-height:1.55}
+.rich>:first-child{margin-top:0}
+.rich>:last-child{margin-bottom:0}
+.rich p{margin:.5em 0}
+.rich h3,.rich h4,.rich h5,.rich h6,.rich h1,.rich h2{margin:.8em 0 .3em;font-size:1.05em}
+.rich ul,.rich ol{margin:.4em 0;padding-left:1.4em}
+.rich pre{overflow-x:auto;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:10px;margin:.6em 0}
+.rich code{font-family:var(--mono);font-size:.88em}
+.rich :not(pre)>code{background:var(--ac-soft);border-radius:4px;padding:1px 5px}
+.rich blockquote{margin:.5em 0;padding-left:12px;border-left:3px solid var(--bd);color:var(--mut)}
+.rich a{color:var(--ac)}
+
+.drop{border:2px dashed var(--bd);border-radius:12px;padding:20px;text-align:center;cursor:pointer;color:var(--mut)}
+.drop:hover,.drop.over{border-color:var(--ac);background:var(--ac-soft)}
+.files{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.frow{display:flex;gap:6px;align-items:center}
+.frow .fn{flex:1;min-width:0;overflow-wrap:anywhere;font-size:.9rem}
+
+.notes{display:grid;grid-template-columns:240px minmax(0,1fr);gap:16px}
+@media (max-width:700px){.notes{grid-template-columns:minmax(0,1fr)}}
+.nl{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto}
+.nitem{text-align:left;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;cursor:pointer;display:flex;flex-direction:column;min-width:0}
+.nitem.on{border-color:var(--ac);background:var(--ac-soft)}
+.nitem small{color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl{display:flex;flex-direction:column;gap:6px}
+.titem{display:flex;gap:10px;align-items:center;padding:8px 10px;background:var(--bg);border-radius:10px}
+.titem label{display:flex;gap:10px;align-items:center;flex:1;min-width:0;cursor:pointer}
+.titem span{flex:1;min-width:0;overflow-wrap:anywhere}
+.titem.done span{text-decoration:line-through;color:var(--mut)}
+
+.back{position:fixed;inset:0;background:rgba(10,12,24,.45);z-index:25}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--card);border-left:1px solid var(--bd);box-shadow:var(--shadow);z-index:30;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+@media (prefers-reduced-motion:no-preference){.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}}
+.dhead{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--bd)}
+.dbody{flex:1;min-height:0;padding:12px 16px 16px}
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;border-radius:99px;padding:12px 18px;box-shadow:var(--shadow);background:linear-gradient(135deg,var(--ac),var(--ac2))}
+
+.chat{display:flex;flex-direction:column;height:100%;min-height:0;gap:10px}
+.panel .chat{height:min(72vh,700px);min-height:420px}
+.chat-bar{display:flex;gap:8px;align-items:center}
+.chat-bar select{flex:1}
+.c-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:2px}
+.bub{max-width:92%;padding:10px 13px;border-radius:14px;overflow-wrap:anywhere}
+.bub.u{align-self:flex-end;background:var(--ac);color:var(--on-ac);border-bottom-right-radius:4px;white-space:pre-wrap}
+.bub.a{align-self:flex-start;background:var(--bg);border:1px solid var(--bd);border-bottom-left-radius:4px}
+.bub.err{border-color:var(--err)}
+.bact{display:flex;gap:6px;margin-top:8px}
+.c-empty{margin:auto 0;text-align:center;color:var(--mut)}
+.c-empty b{color:var(--tx);font-size:1.1rem;font-family:var(--head)}
+.sugg{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.sugg button{text-align:left;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;cursor:pointer;color:var(--tx)}
+.sugg button:hover{border-color:var(--ac)}
+.c-comp{display:flex;gap:8px;align-items:flex-end}
+.c-in{min-height:46px;max-height:160px;font-family:var(--font);font-size:1rem}
+.c-comp .btn{flex:0 0 auto}
+
+footer{text-align:center;color:var(--mut);font-size:.85rem;padding-top:20px;padding-bottom:10px;border-top:1px solid var(--bd);margin-top:24px}
+</style>
+
+<div class="wrap">
+<nav><button class="logo" id="home" type="button">Tool<span>Box</span></button><div class="navr"><button class="btn" id="askbtn" type="button">✦ Ask Claude</button><button class="btn sec" id="install" type="button" hidden>⬇ Install</button><button class="btn sec" id="theme" type="button">Theme</button></div></nav>
+<main id="app"></main>
+<footer>ToolBox · PDF, image and file tools run in your browser and never upload your files. <span id="aif">AI tools send only the text you enter to Claude.</span></footer>
+</div>
+<div id="back" class="back" hidden></div>
+<aside id="drawer" class="drawer" hidden aria-label="Ask Claude"><div class="dhead"><b>✦ Ask Claude</b><button class="btn sec sm" id="dx" type="button" aria-label="Close chat">✕</button></div><div class="dbody" id="dbody"></div></aside>
+<button id="fab" class="btn fab" type="button">✦ Ask Claude</button>
+
+<script src="lib/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+(function(){
+'use strict';
+const NOAI=window.self===window.top&&!window.claude;
+if(NOAI)document.documentElement.classList.add('no-ai');
+const $=(s,r)=>(r||document).querySelector(s);
+const el=(t,a,h)=>{const e=document.createElement(t);for(const k in (a||{}))e.setAttribute(k,a[k]);if(h!=null)e.innerHTML=h;return e};
+const MSG='<div class="msg" role="status"></div>';
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmt=n=>n.toLocaleString('en-IN',{maximumFractionDigits:0});
+const mem={};
+const st={
+ get(k,d){try{const v=localStorage.getItem('tb.'+k);if(v!=null)return JSON.parse(v)}catch(e){}return k in mem?mem[k]:d},
+ set(k,v){mem[k]=v;try{localStorage.setItem('tb.'+k,JSON.stringify(v))}catch(e){}}
+};
+function say(m,t,bad){if(!m)return;m.textContent=t;m.className='msg'+(bad?' e':'')}
+function copy(txt,m){
+ const ok=()=>say(m,'Copied ✓'),bad=()=>say(m,'Copy failed. Select the text and copy it yourself.',1);
+ const fb=()=>{try{const t=document.createElement('textarea');t.value=txt;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();const r=document.execCommand('copy');t.remove();r?ok():bad()}catch(e){bad()}};
+ try{navigator.clipboard.writeText(txt).then(ok,fb)}catch(e){fb()}
+}
+async function dl(data,name,m){
+ try{
+  const d=window.claude?await window.claude.use('downloads'):null;
+  if(d){await d.save({filename:name,data:data});say(m,'Saved ✓ '+name);return}
+  const bl=data instanceof Blob?data:new Blob([data]),u=URL.createObjectURL(bl),a=document.createElement('a');
+  a.href=u;a.download=name;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),10000);say(m,'Saved ✓ '+name)
+ }catch(e){say(m,e&&e.code==='declined'?'Save cancelled':'Could not save the file',1)}
+}
+async function img(f){
+ try{return await createImageBitmap(f)}catch(e){
+  return new Promise((res,rej)=>{const u=URL.createObjectURL(f),i=new Image();i.onload=()=>{res(i);URL.revokeObjectURL(u)};i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('bad image'))};i.src=u});
+ }
+}
+function cv(i,w,h,bg){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');if(bg){x.fillStyle='#fff';x.fillRect(0,0,w,h)}x.drawImage(i,0,0,w,h);return c}
+const blob=(c,t,q)=>new Promise(r=>c.toBlob(r,t,q));
+const sz=n=>n>1048576?(n/1048576).toFixed(2)+' MB':(n/1024).toFixed(1)+' KB';
+const ext=t=>t==='image/jpeg'?'jpg':t==='image/webp'?'webp':'png';
+function needPDF(m){if(typeof PDFLib==='undefined'){say(m,'The PDF engine did not load. Check your connection and reopen this page.',1);return false}return true}
+function beep(){try{const A=window.AudioContext||window.webkitAudioContext,c=new A(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.setValueAtTime(.2,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.8);o.start();o.stop(c.currentTime+.8)}catch(e){}}
+
+/* ---------- tiny markdown renderer (escapes first, so it is safe) ---------- */
+function inl(x){return x.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*\s][^*]*)\*/g,'$1<i>$2</i>').replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')}
+function md(src,hb){
+ hb=hb==null?2:hb;const L=String(src).replace(/\r/g,'').split('\n');let o='',i=0,list=null;
+ const close=()=>{if(list){o+='</'+list+'>';list=null}};
+ while(i<L.length){
+  const l=L[i];
+  if(/^```/.test(l)){close();const code=[];i++;while(i<L.length&&!/^```/.test(L[i])){code.push(L[i]);i++}i++;o+='<pre><code>'+esc(code.join('\n'))+'</code></pre>';continue}
+  const e=esc(l);let m;
+  if((m=e.match(/^(#{1,4}) (.*)/))){close();const k=Math.max(1,Math.min(6,m[1].length+hb));o+='<h'+k+'>'+inl(m[2])+'</h'+k+'>'}
+  else if((m=e.match(/^\s*[-*] (.*)/))){if(list!=='ul'){close();o+='<ul>';list='ul'}o+='<li>'+inl(m[1])+'</li>'}
+  else if((m=e.match(/^\s*\d+[.)] (.*)/))){if(list!=='ol'){close();o+='<ol>';list='ol'}o+='<li>'+inl(m[1])+'</li>'}
+  else if(/^&gt; ?/.test(e)){close();o+='<blockquote>'+inl(e.replace(/^&gt; ?/,''))+'</blockquote>'}
+  else if(/^---+$/.test(e.trim())){close();o+='<hr>'}
+  else if(e.trim()){close();o+='<p>'+inl(e)+'</p>'}
+  else close();
+  i++;
+ }
+ close();return o;
+}
+
+/* ---------- Claude access ---------- */
+let _s=null;
+async function getSample(){if(_s)return _s;try{const s=window.claude?await window.claude.use('sample'):null;if(s)_s=s;return s||null}catch(e){return null}}
+function aiMsg(e){const c=e&&e.code;return c==='no_ai'?'AI works when this page is open in Claude.':c==='not_granted'?'Permission was not granted. Try again and allow it.':c==='rate_limited'?'Too many requests. Wait a moment and try again.':'Claude could not finish that. Please try again.'}
+async function claudeText(prompt,opts){const s=await getSample();if(!s)throw {code:'no_ai'};return s(prompt,Object.assign({cache:false},opts||{}))}
+
+/* ---------- notes store (shared by Notes tool and "Add to Notes" buttons) ---------- */
+function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function addNote(title,body){const ns=st.get('notes',[]);ns.unshift({id:newId(),t:title||'',b:body||'',u:Date.now()});st.set('notes',ns)}
+
+/* ---------- Claude chat (drawer and full page share one conversation) ---------- */
+const MODES={
+ 'Assistant':'You are Claude, a friendly and capable assistant inside the ToolBox web app.',
+ 'Writer':'You are an expert writing assistant. Produce polished, ready-to-use text.',
+ 'Coder':'You are a senior software engineer. Give correct, minimal code in fenced code blocks with a short explanation.',
+ 'Tutor':'You are a patient tutor. Explain step by step, use simple examples and check understanding.',
+ 'Brief':'Answer in as few words as possible. Use bullets only when they help.'
+};
+const SUGG=['Write a polite email asking a client to pay an overdue invoice','Explain input tax credit in GST in simple words','Make a 3-day study plan for a statistics exam','Why does my JavaScript fetch return a Promise?'];
+const CH={msgs:st.get('chat',[]),mode:st.get('chatmode','Assistant'),busy:false,ctl:null,view:null};
+if(!MODES[CH.mode])CH.mode='Assistant';
+function saveChat(){st.set('chat',CH.msgs.filter(m=>!m.pending).slice(-40))}
+function buildHistory(){
+ const arr=[];
+ CH.msgs.forEach(m=>{if(m.err||m.pending||!m.content)return;const last=arr[arr.length-1];if(last&&last.role===m.role)last.content+='\n\n'+m.content;else arr.push({role:m.role,content:m.content})});
+ let h=arr.slice(-24);while(h.length&&h[0].role!=='user')h.shift();
+ if(h.length)h[0]={role:'user',content:'[Instructions: '+MODES[CH.mode]+' Reply in the language the user writes in. Short paragraphs; markdown lists and code blocks are fine.]\n\n'+h[0].content};
+ return h;
+}
+let raf=0;
+function renderSoon(){if(!raf)raf=requestAnimationFrame(()=>{raf=0;renderChat()})}
+function renderChat(){
+ const v=CH.view;if(!v)return;
+ const near=v.list.scrollHeight-v.list.scrollTop-v.list.clientHeight<90;
+ v.list.innerHTML='';
+ if(!CH.msgs.length){
+  const e=el('div',{'class':'c-empty'},'<b>Ask Claude anything</b><p>Writing, maths, code, ideas, explanations. The chat is saved in this browser.</p><div class="sugg"></div>');
+  SUGG.forEach(s=>{const b=el('button',{type:'button'});b.textContent=s;b.onclick=()=>sendMsg(s);$('.sugg',e).appendChild(b)});
+  v.list.appendChild(e);
+ }
+ CH.msgs.forEach(m=>{
+  const d=el('div',{'class':'bub '+(m.role==='user'?'u':'a')+(m.err?' err':'')});
+  if(m.role==='user')d.textContent=m.content;
+  else{
+   if(m.pending&&!m.content)d.textContent='Thinking…';else d.innerHTML='<div class="rich">'+md(m.content,2)+'</div>';
+   if(!m.pending&&m.content&&!m.err){
+    const a=el('div',{'class':'bact'}),c=el('button',{'class':'btn sec sm',type:'button'},'Copy'),n=el('button',{'class':'btn sec sm',type:'button'},'Add to Notes');
+    c.onclick=()=>copy(m.content,v.msg);n.onclick=()=>{addNote('Claude: '+(m.content.replace(/\s+/g,' ').slice(0,40)),m.content);say(v.msg,'Added to Notes ✓')};
+    a.append(c,n);d.appendChild(a);
+   }
+  }
+  v.list.appendChild(d);
+ });
+ v.send.hidden=CH.busy;v.stop.hidden=!CH.busy;
+ if(near||CH.busy)v.list.scrollTop=v.list.scrollHeight;
+}
+async function sendMsg(text){
+ text=(text||'').trim();if(!text||CH.busy||!CH.view)return;
+ CH.busy=true;
+ const s=await getSample();
+ CH.msgs.push({role:'user',content:text});
+ if(!s){CH.msgs.push({role:'assistant',content:'Claude is not available here. Open this page inside Claude to use chat and the AI tools.',err:1});CH.busy=false;saveChat();renderChat();return}
+ const a={role:'assistant',content:'',pending:true};CH.msgs.push(a);
+ const ctl=CH.ctl=new AbortController();renderChat();
+ try{
+  const r=await s(buildHistory(),{onText:x=>{a.content=x.text;renderSoon()},signal:ctl.signal,cache:false});
+  a.content=r.text+(r.truncated?'\n\n_The answer was cut short. Ask me to continue._':'');
+ }catch(e){
+  if(ctl.signal.aborted)a.content=(e&&e.text)||a.content||'Stopped.';
+  else{a.err=1;a.content=aiMsg(e)}
+ }
+ a.pending=false;CH.busy=false;CH.ctl=null;saveChat();renderChat();
+}
+function mountChat(root){
+ root.innerHTML='<div class="chat"><div class="chat-bar"><select class="c-mode" aria-label="Claude mode"></select><button class="btn sec sm c-new" type="button">New chat</button></div><div class="c-list" aria-live="polite"></div><div class="c-comp"><textarea class="c-in sans" rows="2" aria-label="Message to Claude" placeholder="Message Claude. Enter sends, Shift+Enter adds a line."></textarea><div><button class="btn c-send" type="button">Send</button><button class="btn sec c-stop" type="button" hidden>Stop</button></div></div><div class="msg c-msg" role="status"></div></div>';
+ const v=CH.view={root:root,list:$('.c-list',root),inp:$('.c-in',root),send:$('.c-send',root),stop:$('.c-stop',root),msg:$('.c-msg',root)};
+ const ms=$('.c-mode',root);Object.keys(MODES).forEach(k=>{const o=el('option');o.textContent=k;ms.appendChild(o)});ms.value=CH.mode;
+ ms.onchange=()=>{CH.mode=ms.value;st.set('chatmode',CH.mode)};
+ $('.c-new',root).onclick=()=>{if(CH.ctl)CH.ctl.abort();CH.msgs=[];saveChat();renderChat()};
+ const go=()=>{const t=v.inp.value;v.inp.value='';sendMsg(t)};
+ v.send.onclick=go;v.stop.onclick=()=>{if(CH.ctl)CH.ctl.abort()};
+ v.inp.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();go()}};
+ renderChat();
+}
+const drawer=$('#drawer'),backd=$('#back'),fab=$('#fab');
+let page='';
+function syncFab(){fab.hidden=!drawer.hidden||page==='ask-claude'}
+function showChat(){mountChat($('#dbody'));drawer.hidden=false;backd.hidden=false;syncFab();CH.view.inp.focus()}
+function hideChat(){drawer.hidden=true;backd.hidden=true;syncFab()}
+function openChat(prefill,send){
+ if(page!=='ask-claude'&&drawer.hidden)showChat();
+ if(!CH.view)return;
+ if(prefill!=null){if(send)sendMsg(prefill);else{CH.view.inp.value=prefill;CH.view.inp.focus()}}
+}
+function askBtn(row,m,get,prefix,label){const x=el('button',{'class':'btn sec ai',type:'button'},label||'✦ Ask Claude');x.onclick=()=>{const v=get();if(!v||!String(v).trim()){say(m,'Add some content first.',1);return}openChat(prefix+v,true)};row.appendChild(x)}
+
+/* ---------- AI tool template ---------- */
+function ai(b,id,fs,mk,o){
+ o=o||{};const sv=st.get('ai.'+id,{});
+ b.innerHTML=fs.map(f=>{
+  const n='f_'+f[1];let h='<div class="fld"><label for="'+n+'">'+f[0]+'</label>';
+  if(f[2]==='select')h+='<select id="'+n+'">'+f[3].map(x=>'<option>'+x+'</option>').join('')+'</select>';
+  else if(f[2]==='area')h+='<textarea id="'+n+'" class="sans" style="min-height:'+(f[4]||90)+'px" placeholder="'+(f[3]||'')+'"></textarea>';
+  else h+='<input type="text" id="'+n+'" placeholder="'+(f[3]||'')+'">';
+  return h+'</div>';
+ }).join('')
+ +'<div class="row"><button class="btn" id="go" type="button">✦ Generate with Claude</button><button class="btn sec" id="stop" type="button" hidden>Stop</button><button class="btn sec" id="cp" type="button">Copy</button><button class="btn sec" id="sv" type="button">Save .txt</button><button class="btn sec" id="nt" type="button">Add to Notes</button><button class="btn sec" id="fu" type="button">Follow up in chat</button></div>'
+ +(o.md?'<div class="out rich" id="out" aria-live="polite">Your result appears here.</div>':'<textarea id="out" class="sans" style="min-height:260px" aria-label="Result" placeholder="Your result appears here…"></textarea>')+MSG;
+ fs.forEach(f=>{if(f[2]==='area')return;const x=$('#f_'+f[1],b),v=sv[f[1]];
+  if(v!=null&&(f[2]!=='select'||Array.from(x.options).some(op=>op.value===v)))x.value=v;
+  x.addEventListener('change',()=>{const c=st.get('ai.'+id,{});c[f[1]]=x.value;st.set('ai.'+id,c)})});
+ const out=$('#out',b),m=$('.msg',b),go=$('#go',b),stop=$('#stop',b);let busy=false,ctl=null,last='';
+ const setOut=t=>{last=t;if(o.md)out.innerHTML=md(t,3);else out.value=t};
+ const getOut=()=>o.md?last:out.value;
+ go.onclick=async()=>{
+  if(busy)return;
+  const v={};fs.forEach(f=>{v[f[1]]=$('#f_'+f[1],b).value.trim()});
+  if(!v[fs[0][1]]){say(m,'Fill in the first field to start.',1);return}
+  busy=true;go.disabled=true;say(m,'Asking Claude…');
+  const s=await getSample();
+  if(!s){say(m,'AI tools work when this page is open in Claude.',1);busy=false;go.disabled=false;return}
+  ctl=new AbortController();stop.hidden=false;say(m,'Claude is writing…');
+  try{
+   const r=await s(mk(v),{onText:x=>setOut(x.text),signal:ctl.signal,cache:false});
+   setOut(r.text);say(m,r.truncated?'Done. The output was shortened, so try a smaller input.':'Done ✓');
+  }catch(e){
+   if(ctl.signal.aborted){if(e&&e.text)setOut(e.text);say(m,'Stopped.')}else say(m,aiMsg(e),1);
+  }
+  busy=false;go.disabled=false;stop.hidden=true;
+ };
+ stop.onclick=()=>{if(ctl)ctl.abort()};
+ $('#cp',b).onclick=()=>{const t=getOut();if(!t){say(m,'Nothing to copy yet.',1);return}copy(t,m)};
+ $('#sv',b).onclick=()=>{const t=getOut();if(!t){say(m,'Nothing to save yet.',1);return}dl(t,'toolbox-'+id+'.txt',m)};
+ $('#nt',b).onclick=()=>{const t=getOut();if(!t){say(m,'Nothing to add yet.',1);return}addNote(id.replace(/^ai-/,'').replace(/-/g,' '),t);say(m,'Added to Notes ✓')};
+ $('#fu',b).onclick=()=>{const t=getOut();if(!t){say(m,'Generate something first.',1);return}openChat('Here is a draft you wrote for me:\n\n'+t+'\n\nPlease improve it: ',false)};
+}
+function AI(id,n,i,d,fs,mk,o,c){return {id:id,n:n,i:i,c:c||'AI',d:d,ai:1,r(b){ai(b,id,fs,mk,o)}}}
+
+/* ---------- helpers for calculators and file pickers ---------- */
+function calc(b,fs,fn){
+ b.innerHTML='<div class="row">'+fs.map(f=>'<div class="fld"><label>'+f[0]+'<input type="'+(f[2]||'number')+'" value="'+f[1]+'" step="any"></label></div>').join('')+'</div><div class="out"></div>';
+ const ins=b.querySelectorAll('input'),o=$('.out',b);
+ function up(){o.innerHTML=fn([].map.call(ins,i=>i.type==='number'?parseFloat(i.value):i.value))}
+ [].forEach.call(ins,i=>{i.oninput=up});up();
+}
+const bar=(a,z,la,lz)=>{const t=a+z,p=t>0?Math.round(a/t*100):0;return '<div class="split" role="img" aria-label="'+la+' '+p+'%, '+lz+' '+(100-p)+'%"><i style="width:'+p+'%"></i></div><small>'+la+' '+p+'% · '+lz+' '+(100-p)+'%</small>'};
+function picker(accept,note){
+ const wrap=el('div',{},'<div class="drop" tabindex="0" role="button" aria-label="Choose files"><b>Drop files here</b> or click to choose<br><small>'+note+'</small></div><input type="file" accept="'+accept+'" multiple hidden><div class="files"></div>');
+ const dz=$('.drop',wrap),inp=$('input',wrap),box=$('.files',wrap);let files=[];
+ const okf=f=>accept==='application/pdf'?(f.type==='application/pdf'||/\.pdf$/i.test(f.name)):f.type.indexOf('image/')===0;
+ function draw(){
+  box.innerHTML='';
+  files.forEach((f,i)=>{
+   const r=el('div',{'class':'frow'}),n=el('span',{'class':'fn'}),u=el('button',{'class':'btn sec sm',type:'button','aria-label':'Move up'},'↑'),d=el('button',{'class':'btn sec sm',type:'button','aria-label':'Move down'},'↓'),x=el('button',{'class':'btn sec sm',type:'button','aria-label':'Remove'},'✕');
+   n.textContent=(i+1)+'. '+f.name+' ('+sz(f.size)+')';
+   u.onclick=()=>{if(i>0){const t=files[i-1];files[i-1]=files[i];files[i]=t;draw()}};
+   d.onclick=()=>{if(i<files.length-1){const t=files[i+1];files[i+1]=files[i];files[i]=t;draw()}};
+   x.onclick=()=>{files.splice(i,1);draw()};
+   r.append(n,u,d,x);box.appendChild(r);
+  });
+ }
+ const add=list=>{Array.from(list).filter(okf).forEach(f=>files.push(f));draw()};
+ dz.onclick=()=>inp.click();dz.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inp.click()}};
+ inp.onchange=()=>{add(inp.files);inp.value=''};
+ dz.ondragover=e=>{e.preventDefault();dz.classList.add('over')};dz.ondragleave=()=>dz.classList.remove('over');
+ dz.ondrop=e=>{e.preventDefault();dz.classList.remove('over');add(e.dataTransfer.files)};
+ return {el:wrap,get:()=>files};
+}
+function ranges(str,n){const s=new Set();str.split(',').forEach(p=>{p=p.trim();if(!p)return;const m=p.match(/^(\d+)?\s*-\s*(\d+)?$/);if(m&&(m[1]||m[2])){const a=m[1]?+m[1]:1,z=m[2]?+m[2]:n;for(let k=Math.max(1,a);k<=Math.min(n,z);k++)s.add(k-1)}else if(/^\d+$/.test(p)){const k=+p;if(k>=1&&k<=n)s.add(k-1)}});return Array.from(s).sort((x,y)=>x-y)}
+
+/* ---------- the tools ---------- */
+const tools=[
+{id:'ask-claude',n:'Ask Claude',i:'🤖',c:'AI',ai:1,d:'Chat with Claude for writing, maths, code and ideas.',r(b){b.innerHTML='<div id="chatpage"></div>';mountChat($('#chatpage',b))}},
+
+AI('ai-summarizer','AI Summarizer','📰','Condense articles, emails and reports into key points.',
+ [['Text to summarize','tx','area','Paste an article, email, report or notes…',200],['Format','fm','select',['Key points (bullets)','One short paragraph','One sentence','TL;DR, key points and action items']],['Language','lg','select',['Same as the text','English','Hindi','Malayalam','Tamil']]],
+ v=>'Summarize the text below.\nFormat: '+v.fm+'\nOutput language: '+v.lg+'\nStay faithful to the text and add no new facts. Use markdown bullets where they help. No preamble.\n\nTEXT:\n'+v.tx,{md:1}),
+AI('ai-rewriter','AI Rewriter','✏️','Rewrite, shorten or expand text in the tone you pick.',
+ [['Text to rewrite','tx','area','Paste the text you want improved…',180],['Tone','tn','select',['Professional','Friendly','Concise','Persuasive','Simple and clear','Formal (letter style)','Casual']],['Goal','gl','select',['Rewrite','Shorten by about half','Expand with more detail','Fix flow only']]],
+ v=>'Rewrite the text below.\nGoal: '+v.gl+'\nTone: '+v.tn+'\nKeep the meaning and all facts. Return only the rewritten text, plain text, no preamble.\n\nTEXT:\n'+v.tx),
+AI('ai-grammar','AI Proofreader','✅','Fix spelling and grammar and see what changed.',
+ [['Text to proofread','tx','area','Paste your text here…',180],['Spelling style','sp','select',['Indian English','British English','American English']]],
+ v=>'Proofread the text below using '+v.sp+' spelling. Fix spelling, grammar and punctuation only; keep the writer\'s voice.\nReturn the corrected text first. Then a line containing only ---. Then a short list of the main changes (at most 8), one per line starting with "-". Plain text.\n\nTEXT:\n'+v.tx),
+AI('ai-translator','AI Translator','🌐','Translate text into 20 languages, including Malayalam and Hindi.',
+ [['Text to translate','tx','area','Paste the text to translate…',160],['Translate to','to','select',['Malayalam','Hindi','English','Tamil','Telugu','Kannada','Bengali','Marathi','Gujarati','Punjabi','Urdu','Arabic','Spanish','French','German','Portuguese','Russian','Japanese','Korean','Chinese (Simplified)']],['Style','sy','select',['Natural','Formal','Casual']]],
+ v=>'Translate the text below into '+v.to+'. Style: '+v.sy+'. Keep names, numbers and formatting. Return only the translation, plain text.\n\nTEXT:\n'+v.tx),
+AI('ai-email','AI Email Writer','✉️','Draft clear emails with a subject line in seconds.',
+ [['What is the email about?','tp','area','e.g. Ask a client to pay invoice 214, which is 10 days overdue',90],['Key points to include (optional)','kp','area','Amounts, dates, names…',70],['Type','ty','select',['Request','Follow-up','Reply','Complaint','Apology','Thank you','Leave application','Job application','Payment reminder','Introduction']],['Tone','tn','select',['Polite and professional','Friendly','Firm','Formal','Warm']],['Length','ln','select',['Short (3-5 sentences)','Medium','Detailed']]],
+ v=>'Write an email.\nType: '+v.ty+'\nAbout: '+v.tp+'\nKey points: '+(v.kp||'none')+'\nTone: '+v.tn+'\nLength: '+v.ln+'\nStart with a line "Subject: ..." then a blank line, then the email with greeting and sign-off. Plain text, no extra commentary.'),
+AI('ai-explainer','AI Explainer','💡','Get any topic explained at the level you need.',
+ [['What should Claude explain?','tp','area','A concept, a paragraph, a formula, a document term…',120],['Level','lv','select',['Like I am 10','High-school student','College student','Expert']],['Style','sy','select',['Short answer','Step by step','With an analogy and an example']]],
+ v=>'Explain the following.\nLevel: '+v.lv+'\nStyle: '+v.sy+'\nUse short paragraphs and markdown. Be accurate; say so if something is uncertain.\n\n'+v.tp,{md:1}),
+AI('ai-code','AI Code Helper','⌨️','Explain, debug, convert, comment or write code.',
+ [['Paste code or describe what you need','cd','area','Paste code, an error message, or describe the program…',200],['Task','tk','select',['Explain this code','Find and fix bugs','Add comments','Convert to another language','Write code from my description','Optimize and refactor','Write unit tests']],['Language or target (optional)','lg','text','e.g. Python, SQL, convert to TypeScript']],
+ v=>'You are a senior engineer. Task: '+v.tk+'.\nLanguage/target: '+(v.lg||'infer from the input')+'.\nGive correct code in fenced code blocks and a short explanation of what you changed or how it works.\n\nINPUT:\n'+v.cd,{md:1}),
+AI('ai-regex','AI Regex Builder','🧪','Describe a pattern in words and get a tested regex.',
+ [['What should it match?','ds','area','e.g. Indian mobile numbers with optional +91',90],['Flavor','fl','select',['JavaScript','Python','PCRE / PHP','Java']],['Sample text (optional)','sm','area','Paste text to test against',70]],
+ v=>'Create a regular expression for '+v.fl+'.\nGoal: '+v.ds+'\nSample text: '+(v.sm||'none')+'\nReturn: 1) the regex in a code block, 2) the flags, 3) a short explanation of each part, 4) three strings that match and three that do not.',{md:1}),
+AI('ai-blog','AI Blog & SEO Writer','🗞️','Outlines, titles, meta descriptions and drafts.',
+ [['Topic or keyword','tp','area','e.g. how to compare home loan interest rates',80],['Audience (optional)','au','text','e.g. first-time home buyers'],['Output','op','select',['Outline, SEO titles and meta description','Full draft (about 600 words)','Title ideas only','LinkedIn post','Newsletter intro']]],
+ v=>'Write content for this brief.\nTopic: '+v.tp+'\nAudience: '+(v.au||'general readers')+'\nOutput: '+v.op+'\nBe specific and useful; avoid filler. Use markdown headings and lists.',{md:1}),
+AI('ai-resume','AI Resume & Cover Letter','💼','Improve resume bullets, write summaries and cover letters.',
+ [['Your experience or current bullets','ex','area','Paste your role, achievements or existing resume lines…',160],['Task','tk','select',['Improve my resume bullets','Write a professional summary','Write a cover letter','Prepare interview answers (STAR)']],['Job description (optional)','jd','area','Paste the job posting to tailor the result',90]],
+ v=>'Task: '+v.tk+'.\nCandidate background:\n'+v.ex+'\nJob description: '+(v.jd||'not provided')+'\nUse strong verbs and measurable results where the facts allow. Do not invent facts or numbers; mark any placeholder as [add detail]. Plain text.'),
+AI('ai-meeting','AI Meeting Notes','👥','Turn messy notes or a transcript into minutes and action items.',
+ [['Meeting notes or transcript','nt','area','Paste notes here…',200],['Output','op','select',['Summary, decisions and action items (with owners)','Action items only','Formal minutes','Follow-up email to attendees']]],
+ v=>'From the meeting notes below produce: '+v.op+'.\nOnly use what is in the notes; write "owner unclear" when unknown. Use markdown.\n\nNOTES:\n'+v.nt,{md:1}),
+AI('ai-study','AI Study Helper','🎓','Flashcards, quizzes, summaries and study plans from your material.',
+ [['Study material or topic','mt','area','Paste your notes or name a topic…',160],['Output','op','select',['Flashcards (Q and A)','10 quiz questions with answers','Summary and key terms','7-day study plan','Explain the hard parts']],['Level','lv','select',['School','College','Competitive exam','Professional']]],
+ v=>'Create study material.\nOutput: '+v.op+'\nLevel: '+v.lv+'\nMaterial:\n'+v.mt+'\nUse markdown. Be accurate and concise.',{md:1}),
+AI('ai-prompt','AI Prompt Improver','🪄','Turn a rough request into a clear, effective prompt.',
+ [['Your rough request','rq','area','e.g. make me a workout plan',100],['Prompt is for','tg','select',['Any AI assistant','Image generator','Coding assistant','Marketing copy','Research']]],
+ v=>'Rewrite this rough request as a clear, well-structured prompt for: '+v.tg+'.\nRequest: '+v.rq+'\nInclude role, context, task, constraints and output format. Return the improved prompt, then a heading "Questions the AI may ask" with 3 short questions. Plain text.'),
+AI('ai-script-writer','AI Script Writer','🎬','Ready-to-record scripts for YouTube, Shorts, podcasts and ads.',
+ [['What is the video about?','tp','area','e.g. 5 mistakes beginners make when learning to fly'],['Format','fm','select',['YouTube video (5-8 min)','Short / Reel / TikTok (under 60 sec)','Podcast episode intro and outline','Product ad (30 sec)','Storytelling / explainer']],['Tone','tn','select',['Friendly and conversational','Energetic','Serious and informative','Funny','Cinematic']],['Audience (optional)','au','text','e.g. students in India']],
+ v=>'You are an expert scriptwriter for online creators. Write a ready-to-record script.\nTopic: '+v.tp+'\nFormat: '+v.fm+'\nTone: '+v.tn+'\nAudience: '+(v.au||'general')+'\nInclude a strong hook in the first 5 seconds and clearly labelled sections (HOOK, INTRO, MAIN POINTS, CTA). Use short spoken-style sentences and add [B-ROLL] and [ON-SCREEN TEXT] cues in square brackets. Plain text only, no markdown symbols.',null,'Creator'),
+AI('ai-hooks','AI Hook & Title Generator','🪝','Scroll-stopping hooks and click-worthy titles.',
+ [['Topic','tp','area','What is your content about?'],['Platform','pl','select',['YouTube','Instagram Reels','TikTok','LinkedIn','X (Twitter)']],['Style','st','select',['Curiosity','Shocking fact','Question','Story opener','How-to']]],
+ v=>'Write 10 opening hooks (first line spoken or shown) and 10 titles for this content.\nTopic: '+v.tp+'\nPlatform: '+v.pl+'\nStyle: '+v.st+'\nKeep each under 80 characters, specific and honest (no false claims). Number the lists. Plain text only.',null,'Creator'),
+AI('ai-captions','AI Caption & Hashtag Writer','#️⃣','Captions, calls to action and hashtags for any platform.',
+ [['What is the post about?','tp','area','Describe your post or video'],['Platform','pl','select',['Instagram','TikTok','YouTube Shorts','LinkedIn','Facebook']],['Tone','tn','select',['Friendly','Funny','Inspiring','Professional','Bold']]],
+ v=>'Write 3 different caption options for a '+v.pl+' post.\nAbout: '+v.tp+'\nTone: '+v.tn+'\nEach caption needs a hook line, a short body and a call to action, with fitting emojis. Then list 15 relevant hashtags mixing popular and niche. Plain text only.',null,'Creator'),
+
+{id:'notes',n:'Notes',i:'🗒️',c:'Productivity',d:'Private notes saved in this browser, with search and export.',r(b){
+ const ns=st.get('notes',[]);let cur=ns.length?ns[0].id:null,q='',armed=0,busy=false;
+ b.innerHTML='<div class="notes"><div><div class="row"><input type="search" id="nq" placeholder="Search notes" aria-label="Search notes"><button class="btn sm" id="nn" type="button">+ New</button></div><div id="nl" class="nl"></div></div><div><input type="text" id="nt" placeholder="Title" aria-label="Note title"><textarea id="nb" class="sans" style="min-height:300px;margin-top:8px" placeholder="Write here. Notes save automatically in this browser." aria-label="Note text"></textarea><div class="row"><button class="btn sec" id="ncp" type="button">Copy</button><button class="btn sec" id="nsv" type="button">Save .txt</button><button class="btn sec ai" id="nai" type="button">✦ Tidy with Claude</button><button class="btn sec" id="ndl" type="button">Delete</button></div>'+MSG+'</div></div>';
+ const m=$('.msg',b),nt=$('#nt',b),nb=$('#nb',b),nl=$('#nl',b),ndl=$('#ndl',b);
+ const save=()=>st.set('notes',ns),get=()=>ns.find(n=>n.id===cur);
+ function draw(){
+  nl.innerHTML='';
+  const f=ns.filter(n=>(n.t+' '+n.b).toLowerCase().indexOf(q.toLowerCase())>-1);
+  if(!f.length)nl.innerHTML='<div class="empty sm">'+(ns.length?'No notes match.':'No notes yet. Click + New.')+'</div>';
+  f.forEach(n=>{const x=el('button',{'class':'nitem'+(n.id===cur?' on':''),type:'button'}),a=el('b'),s=el('small');a.textContent=n.t||'Untitled';s.textContent=new Date(n.u).toLocaleDateString()+' · '+(n.b.replace(/\s+/g,' ').slice(0,50)||'Empty');x.append(a,s);x.onclick=()=>{cur=n.id;load();draw()};nl.appendChild(x)});
+ }
+ function load(){const n=get();nt.value=n?n.t:'';nb.value=n?n.b:'';nt.disabled=nb.disabled=!n}
+ function make(t,body){const n={id:newId(),t:t||'',b:body||'',u:Date.now()};ns.unshift(n);cur=n.id;save()}
+ if(!ns.length)make('Welcome','This is a sample note. Notes are saved in this browser only. Use Tidy with Claude to clean up rough notes, or delete this one.');
+ $('#nn',b).onclick=()=>{make('','');load();draw();nt.focus()};
+ const edit=()=>{const n=get();if(!n)return;n.t=nt.value;n.b=nb.value;n.u=Date.now();ns.splice(ns.indexOf(n),1);ns.unshift(n);save();draw()};
+ nt.oninput=edit;nb.oninput=edit;
+ $('#nq',b).oninput=function(){q=this.value;draw()};
+ $('#ncp',b).onclick=()=>copy(nb.value,m);
+ $('#nsv',b).onclick=()=>{if(!nb.value){say(m,'This note is empty.',1);return}dl(nb.value,((nt.value||'note').replace(/[^\w\- ]+/g,'').trim()||'note')+'.txt',m)};
+ ndl.onclick=()=>{
+  if(!get())return;
+  if(!armed){armed=1;ndl.textContent='Click again to delete';setTimeout(()=>{armed=0;ndl.textContent='Delete'},3000);return}
+  armed=0;ndl.textContent='Delete';ns.splice(ns.indexOf(get()),1);cur=ns.length?ns[0].id:null;save();load();draw();say(m,'Note deleted.');
+ };
+ $('#nai',b).onclick=async()=>{
+  if(busy||!nb.value.trim()){if(!nb.value.trim())say(m,'Write something first.',1);return}
+  busy=true;say(m,'Claude is tidying your note…');
+  try{const r=await claudeText('Tidy these rough notes: fix spelling, group related points under short headings, keep every fact, use plain text with "-" bullets. Return only the tidied notes.\n\n'+nb.value);make('Tidied: '+(nt.value||'note'),r.text);load();draw();say(m,'Saved as a new note ✓')}
+  catch(e){say(m,aiMsg(e),1)}
+  busy=false;
+ };
+ load();draw();
+}},
+{id:'todo',n:'To-do List',i:'✅',c:'Productivity',d:'A simple task list that remembers your tasks, with Claude to plan steps.',r(b){
+ let ts=st.get('todo',[]),fl='all',busy=false;
+ b.innerHTML='<div class="row"><input type="text" id="ti" placeholder="Add a task and press Enter" aria-label="New task"><button class="btn" id="ta" type="button">Add</button><button class="btn sec ai" id="tc" type="button">✦ Break into steps</button></div><div class="row" id="tf"></div><div id="tl" class="tl"></div><div class="row"><span id="tn" class="info" style="flex:1 1 auto"></span><button class="btn sec" id="tx" type="button">Clear completed</button></div>'+MSG;
+ const m=$('.msg',b),ti=$('#ti',b),tl=$('#tl',b),save=()=>st.set('todo',ts);
+ ['all','active','done'].forEach(k=>{const x=el('button',{'class':'btn sec sm',type:'button','data-k':k});x.textContent=k==='all'?'All':k==='active'?'Active':'Done';x.onclick=()=>{fl=k;draw()};$('#tf',b).appendChild(x)});
+ function draw(){
+  Array.from($('#tf',b).children).forEach(x=>x.classList.toggle('on',x.getAttribute('data-k')===fl));
+  tl.innerHTML='';
+  const v=ts.filter(t=>fl==='all'||(fl==='done')===!!t.d);
+  if(!v.length)tl.innerHTML='<div class="empty sm">'+(ts.length?'Nothing here.':'No tasks yet. Add one above.')+'</div>';
+  v.forEach(t=>{
+   const r=el('div',{'class':'titem'+(t.d?' done':'')}),l=el('label'),c=el('input',{type:'checkbox'}),s=el('span'),x=el('button',{'class':'btn sec sm',type:'button','aria-label':'Delete task'},'✕');
+   c.checked=!!t.d;s.textContent=t.t;c.onchange=()=>{t.d=c.checked;save();draw()};x.onclick=()=>{ts=ts.filter(z=>z!==t);save();draw()};
+   l.append(c,s);r.append(l,x);tl.appendChild(r);
+  });
+  const left=ts.filter(t=>!t.d).length;$('#tn',b).textContent=left+' left · '+(ts.length-left)+' done';
+ }
+ const add=()=>{const t=ti.value.trim();if(!t)return;ts.unshift({id:newId(),t:t,d:0});ti.value='';save();draw()};
+ $('#ta',b).onclick=add;ti.onkeydown=e=>{if(e.key==='Enter')add()};
+ $('#tx',b).onclick=()=>{ts=ts.filter(t=>!t.d);save();draw()};
+ $('#tc',b).onclick=async()=>{
+  const g=ti.value.trim();if(!g){say(m,'Type a goal in the box first, for example "Launch my website".',1);return}
+  if(busy)return;busy=true;say(m,'Claude is planning…');
+  try{
+   const r=await claudeText('Break this goal into 5 to 8 concrete, ordered tasks. One task per line, no numbering, no extra text.\nGoal: '+g);
+   const lines=r.text.split('\n').map(x=>x.replace(/^[\s\-*•\d.)]+/,'').trim()).filter(Boolean).slice(0,10);
+   lines.reverse().forEach(t=>ts.unshift({id:newId(),t:t,d:0}));ti.value='';save();draw();say(m,'Added '+lines.length+' tasks ✓');
+  }catch(e){say(m,aiMsg(e),1)}
+  busy=false;
+ };
+ draw();
+}},
+{id:'pomodoro',n:'Pomodoro Timer',i:'🍅',c:'Productivity',d:'Focus sessions with short and long breaks, counted per day.',r(b){
+ const MD={focus:'Focus',short:'Short break',long:'Long break'},key='pomo.'+new Date().toISOString().slice(0,10);
+ let mode='focus',run=0,endAt=0,left=0,n=st.get(key,0);
+ b.innerHTML='<div class="row" id="pm"></div><div class="big" id="pd" role="timer">25:00</div><div class="split" style="background:var(--bd)"><i id="pb" style="width:0%"></i></div><div class="row"><button class="btn" id="ps" type="button">Start</button><button class="btn sec" id="pr" type="button">Reset</button></div><div class="row"><div class="fld"><label>Focus (min)<input type="number" id="mf" value="25" min="1" max="180"></label></div><div class="fld"><label>Short break (min)<input type="number" id="ms" value="5" min="1" max="60"></label></div><div class="fld"><label>Long break (min)<input type="number" id="ml" value="15" min="1" max="90"></label></div></div><div class="info" id="pc"></div>'+MSG;
+ const m=$('.msg',b),pd=$('#pd',b),pb=$('#pb',b),ps=$('#ps',b);
+ const dur=()=>Math.max(1,+$('#m'+(mode==='focus'?'f':mode==='short'?'s':'l'),b).value||1)*60000;
+ const pad=x=>String(x).padStart(2,'0');
+ function show(){const s=Math.ceil(left/1000);pd.textContent=pad(Math.floor(s/60))+':'+pad(s%60);pb.style.width=Math.max(0,Math.min(100,(1-left/dur())*100))+'%';ps.textContent=run?'Pause':'Start';$('#pc',b).textContent='Focus sessions completed today: '+n;Array.from($('#pm',b).children).forEach(x=>x.classList.toggle('on',x.getAttribute('data-k')===mode))}
+ function set(k){mode=k;run=0;left=dur();show()}
+ Object.keys(MD).forEach(k=>{const x=el('button',{'class':'btn sec',type:'button','data-k':k});x.textContent=MD[k];x.onclick=()=>{say(m,'');set(k)};$('#pm',b).appendChild(x)});
+ function finish(){run=0;left=0;beep();if(mode==='focus'){n++;st.set(key,n);say(m,'Focus session complete. Time for a break.');mode=n%4===0?'long':'short'}else{say(m,'Break over. Ready to focus?');mode='focus'}left=dur();show()}
+ const iv=setInterval(()=>{if(!document.body.contains(pd)){clearInterval(iv);return}if(run){left=endAt-Date.now();if(left<=0)finish();else show()}},250);
+ ps.onclick=()=>{if(run){left=endAt-Date.now();run=0}else{endAt=Date.now()+left;run=1;say(m,'')}show()};
+ $('#pr',b).onclick=()=>{say(m,'');set(mode)};
+ ['mf','ms','ml'].forEach(i=>{$('#'+i,b).onchange=()=>{if(!run){left=dur();show()}}});
+ set('focus');
+}},
+
+{id:'word-counter',n:'Word Counter',i:'📝',c:'Text',d:'Count words, characters, sentences and reading time.',r(b){
+ b.innerHTML='<textarea id="t" class="sans" placeholder="Type or paste your text…"></textarea><div class="stats"></div><div class="row"><button class="btn sec" id="cp" type="button">Copy text</button></div>'+MSG;
+ const t=$('#t',b),s=$('.stats',b),m=$('.msg',b);
+ const up=()=>{const v=t.value,w=(v.trim().match(/\S+/g)||[]).length,sn=(v.match(/[^.!?]+[.!?]+/g)||[]).length,pg=v.split(/\n\s*\n/).filter(x=>x.trim()).length;
+  const d=[['Words',w],['Characters',v.length],['No spaces',v.replace(/\s/g,'').length],['Sentences',sn],['Paragraphs',pg],['Reading time',Math.max(w?1:0,Math.ceil(w/230))+' min'],['Speaking time',Math.max(w?1:0,Math.ceil(w/150))+' min']];
+  s.innerHTML=d.map(x=>'<div class="stat"><b>'+x[1]+'</b><small>'+x[0]+'</small></div>').join('')};
+ t.oninput=up;up();$('#cp',b).onclick=()=>copy(t.value,m);
+ askBtn($('.row',b),m,()=>t.value,'Improve this text and fix any mistakes. Return only the improved text:\n\n','✦ Improve with Claude');
+}},
+{id:'case-converter',n:'Case Converter',i:'🔠',c:'Text',d:'UPPER, lower, Title, snake_case and more.',r(b){
+ b.innerHTML='<textarea id="t" class="sans" placeholder="Enter text to convert…"></textarea><div class="row" id="bt"></div><div class="row"><button class="btn sec" id="cp" type="button">Copy</button></div>'+MSG;
+ const t=$('#t',b),m=$('.msg',b),words=s=>s.toLowerCase().match(/[a-z0-9]+/g)||[];
+ const f={'UPPER':s=>s.toUpperCase(),'lower':s=>s.toLowerCase(),
+ 'Title':s=>s.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()),
+ 'Sentence':s=>s.toLowerCase().replace(/(^\s*|[.!?]\s+)([a-z])/g,(_,a,c)=>a+c.toUpperCase()),
+ 'snake_case':s=>words(s).join('_'),'kebab-case':s=>words(s).join('-'),
+ 'camelCase':s=>words(s).map((w,i)=>i?w[0].toUpperCase()+w.slice(1):w).join('')};
+ Object.keys(f).forEach(k=>{const x=el('button',{'class':'btn sec',type:'button'},k);x.onclick=()=>{t.value=f[k](t.value)};$('#bt',b).appendChild(x)});
+ $('#cp',b).onclick=()=>copy(t.value,m);
+}},
+{id:'json-formatter',n:'JSON Formatter',i:'🧩',c:'Developer',d:'Beautify, minify and validate JSON.',r(b){
+ b.innerHTML='<textarea id="t" placeholder=\'{"paste":"your JSON"}\'></textarea><div class="row"><button class="btn" id="f" type="button">Format</button><button class="btn sec" id="mn" type="button">Minify</button><button class="btn sec" id="cp" type="button">Copy</button></div>'+MSG;
+ const t=$('#t',b),m=$('.msg',b);
+ const go=sp=>{try{t.value=JSON.stringify(JSON.parse(t.value),null,sp);say(m,'Valid JSON ✓')}catch(e){say(m,'Invalid JSON: '+e.message,1)}};
+ $('#f',b).onclick=()=>go(2);$('#mn',b).onclick=()=>go(0);$('#cp',b).onclick=()=>copy(t.value,m);
+ askBtn($('.row',b),m,()=>t.value,'Explain this JSON and fix it if it is invalid:\n\n','✦ Explain or fix');
+}},
+{id:'base64',n:'Base64 Encoder',i:'🔐',c:'Developer',d:'Encode and decode Base64 text safely.',r(b){
+ b.innerHTML='<textarea id="t" placeholder="Text or Base64…"></textarea><div class="row"><button class="btn" id="e" type="button">Encode</button><button class="btn sec" id="d" type="button">Decode</button><button class="btn sec" id="cp" type="button">Copy</button></div>'+MSG;
+ const t=$('#t',b),m=$('.msg',b);
+ $('#e',b).onclick=()=>{try{const u=new TextEncoder().encode(t.value);let s='';u.forEach(c=>{s+=String.fromCharCode(c)});t.value=btoa(s);say(m,'Encoded')}catch(e){say(m,'Could not encode',1)}};
+ $('#d',b).onclick=()=>{try{const s=atob(t.value.trim()),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);t.value=new TextDecoder().decode(u);say(m,'Decoded')}catch(e){say(m,'Not valid Base64',1)}};
+ $('#cp',b).onclick=()=>copy(t.value,m);
+}},
+{id:'url-encoder',n:'URL Encoder',i:'🔗',c:'Developer',d:'Encode or decode URLs and query strings.',r(b){
+ b.innerHTML='<textarea id="t" placeholder="Paste a URL or text…"></textarea><div class="row"><button class="btn" id="e" type="button">Encode</button><button class="btn sec" id="d" type="button">Decode</button><button class="btn sec" id="cp" type="button">Copy</button></div>'+MSG;
+ const t=$('#t',b),m=$('.msg',b);
+ $('#e',b).onclick=()=>{t.value=encodeURIComponent(t.value);say(m,'Encoded')};
+ $('#d',b).onclick=()=>{try{t.value=decodeURIComponent(t.value);say(m,'Decoded')}catch(e){say(m,'Malformed URL sequence',1)}};
+ $('#cp',b).onclick=()=>copy(t.value,m);
+}},
+{id:'password-generator',n:'Password Generator',i:'🛡️',c:'Security',d:'Create strong random passwords.',r(b){
+ b.innerHTML='<div class="fld"><label>Length: <b id="lv">16</b><input type="range" id="len" min="8" max="64" value="16"></label></div><div class="row"><label class="ck"><input type="checkbox" id="u" checked>A–Z</label><label class="ck"><input type="checkbox" id="l" checked>a–z</label><label class="ck"><input type="checkbox" id="n" checked>0–9</label><label class="ck"><input type="checkbox" id="s" checked>Symbols</label><label class="ck"><input type="checkbox" id="ax">Avoid look-alikes</label></div><div class="out mono" id="o">–</div><div class="info" id="en"></div><div class="row"><button class="btn" id="g" type="button">Generate</button><button class="btn sec" id="cp" type="button">Copy</button></div>'+MSG;
+ const m=$('.msg',b),o=$('#o',b),len=$('#len',b);
+ const sets={u:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',l:'abcdefghijklmnopqrstuvwxyz',n:'0123456789',s:'!@#$%^&*()-_=+[]{};:,.?'};
+ function gen(){
+  const ks=Object.keys(sets).filter(k=>$('#'+k,b).checked);let set=ks.map(k=>sets[k]).join('');
+  if($('#ax',b).checked)set=set.replace(/[0O1lI|]/g,'');
+  if(!set){say(m,'Pick at least one character type.',1);return}
+  const n=+len.value,max=Math.floor(4294967296/set.length)*set.length;let pw='';
+  for(let tries=0;tries<50;tries++){
+   const out=[];while(out.length<n){const a=new Uint32Array(n);crypto.getRandomValues(a);for(const x of a){if(x<max&&out.length<n)out.push(set[x%set.length])}}
+   pw=out.join('');if(ks.every(k=>Array.from(pw).some(c=>sets[k].indexOf(c)>-1)))break;
+  }
+  o.textContent=pw;const bits=Math.round(n*Math.log2(set.length));
+  $('#en',b).textContent=bits+' bits of entropy · '+(bits<60?'Weak':bits<80?'Okay':bits<100?'Strong':'Very strong');say(m,'');
+ }
+ len.oninput=()=>{$('#lv',b).textContent=len.value;gen()};
+ ['u','l','n','s','ax'].forEach(k=>{$('#'+k,b).onchange=gen});
+ $('#g',b).onclick=gen;$('#cp',b).onclick=()=>copy(o.textContent,m);gen();
+}},
+{id:'unit-converter',n:'Unit Converter',i:'📏',c:'Calculators',d:'Length, weight, area (cent, acre), volume, speed, time, data and temperature.',r(b){
+ const U={Length:{m:1,km:1000,cm:.01,mm:.001,mile:1609.344,yard:.9144,ft:.3048,inch:.0254},
+ Weight:{kg:1,g:.001,mg:1e-6,quintal:100,tonne:1000,lb:.45359237,oz:.028349523},
+ Area:{'sq m':1,'sq km':1e6,hectare:1e4,acre:4046.8564224,cent:40.468564224,'sq ft':.09290304,'sq yd':.83612736,'sq in':.00064516},
+ Volume:{litre:1,ml:.001,'cubic m':1000,'gallon (US)':3.785411784,cup:.2365882365,tbsp:.01478676478125,tsp:.00492892159375},
+ Speed:{'m/s':1,'km/h':1/3.6,mph:.44704,knot:.5144444444,'ft/s':.3048},
+ Time:{second:1,minute:60,hour:3600,day:86400,week:604800,'year (365 d)':31536000},
+ Data:{byte:1,KB:1024,MB:1048576,GB:1073741824,TB:1099511627776},
+ Temperature:{'°C':0,'°F':0,K:0}};
+ b.innerHTML='<div class="row"><select id="cat" aria-label="Category"></select></div><div class="row"><input type="number" id="v" value="1" step="any" aria-label="Value"><select id="a" aria-label="From"></select><button class="btn sec" id="sw" type="button" aria-label="Swap units">⇄</button><select id="z" aria-label="To"></select></div><div class="out" id="o"></div><div class="stats" id="all"></div>';
+ const cat=$('#cat',b),a=$('#a',b),z=$('#z',b),v=$('#v',b),o=$('#o',b),all=$('#all',b);
+ Object.keys(U).forEach(k=>cat.appendChild(el('option',{},k)));
+ const conv=(x,f,t)=>{const c=cat.value;if(c==='Temperature'){const k=f==='°C'?x+273.15:f==='°F'?(x-32)*5/9+273.15:x;return t==='°C'?k-273.15:t==='°F'?(k-273.15)*9/5+32:k}return x*U[c][f]/U[c][t]};
+ const nf=r=>r.toLocaleString('en-US',{maximumSignificantDigits:8});
+ function up(){const x=parseFloat(v.value);if(isNaN(x)){o.textContent='–';all.innerHTML='';return}
+  o.innerHTML=x+' '+a.value+' = <b>'+nf(conv(x,a.value,z.value))+'</b> '+z.value;
+  all.innerHTML=Object.keys(U[cat.value]).filter(u=>u!==a.value).map(u=>'<div class="stat"><b style="font-size:1rem">'+nf(conv(x,a.value,u))+'</b><small>'+u+'</small></div>').join('')}
+ function fill(){const us=Object.keys(U[cat.value]);a.innerHTML=z.innerHTML=us.map(u=>'<option>'+u+'</option>').join('');z.selectedIndex=1;up()}
+ cat.onchange=fill;a.onchange=z.onchange=up;v.oninput=up;
+ $('#sw',b).onclick=()=>{const t=a.value;a.value=z.value;z.value=t;up()};fill();
+}},
+{id:'color-converter',n:'Color Converter',i:'🎨',c:'Design',d:'Pick a color and get HEX, RGB, HSL and shades.',r(b){
+ b.innerHTML='<div class="row"><input type="color" id="p" value="#5558ee" aria-label="Pick a color"><input type="text" id="hx" value="#5558ee" aria-label="Hex code" spellcheck="false"></div><div class="sw" id="sw"></div><div class="out mono" id="o1"></div><div class="out mono" id="o2"></div><div class="out mono" id="o3"></div><div class="info">Click a value or shade to copy it.</div><div class="shades" id="sh"></div>'+MSG;
+ const p=$('#p',b),hx=$('#hx',b),m=$('.msg',b);
+ const norm=s=>{s=s.trim().replace(/^#/,'');if(/^[0-9a-f]{3}$/i.test(s))s=s.split('').map(c=>c+c).join('');return /^[0-9a-f]{6}$/i.test(s)?'#'+s.toLowerCase():null};
+ const h2x=(h,s,l)=>{s/=100;l/=100;const a=s*Math.min(l,1-l),f=n=>{const k=(n+h/30)%12,c=l-a*Math.max(-1,Math.min(k-3,9-k,1));return Math.round(255*c).toString(16).padStart(2,'0')};return '#'+f(0)+f(8)+f(4)};
+ function up(h){
+  const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),bl=parseInt(h.slice(5,7),16),R=r/255,G=g/255,B=bl/255,mx=Math.max(R,G,B),mn=Math.min(R,G,B),l=(mx+mn)/2,d=mx-mn,s=d?d/(1-Math.abs(2*l-1)):0;let hu=0;
+  if(d){hu=mx===R?((G-B)/d)%6:mx===G?(B-R)/d+2:(R-G)/d+4;hu=Math.round(hu*60);if(hu<0)hu+=360}
+  $('#sw',b).style.background=h;$('#o1',b).textContent=h.toUpperCase();$('#o2',b).textContent='rgb('+r+', '+g+', '+bl+')';$('#o3',b).textContent='hsl('+hu+', '+Math.round(s*100)+'%, '+Math.round(l*100)+'%)';
+  const sh=$('#sh',b);sh.innerHTML='';[95,85,75,65,55,45,35,25,15].forEach(L=>{const c=h2x(hu,Math.round(s*100),L),x=el('button',{type:'button',title:c,'aria-label':'Copy '+c});x.style.background=c;x.onclick=()=>copy(c,m);sh.appendChild(x)});
+ }
+ p.oninput=()=>{hx.value=p.value;up(p.value)};
+ hx.oninput=()=>{const n=norm(hx.value);if(n){p.value=n;up(n)}};
+ ['o1','o2','o3'].forEach(i=>{const e=$('#'+i,b);e.style.cursor='pointer';e.title='Click to copy';e.onclick=()=>copy(e.textContent,m)});
+ up(p.value);
+}},
+{id:'pdf-merge',n:'Merge PDF',i:'📚',c:'PDF',d:'Combine several PDFs into one file, in the order you choose.',r(b){
+ b.innerHTML='<div id="pk"></div><div class="row"><button class="btn" id="go" type="button">Merge &amp; save</button></div>'+MSG;
+ const m=$('.msg',b),p=picker('application/pdf','PDF files only. Use the arrows to set the order.');$('#pk',b).appendChild(p.el);
+ $('#go',b).onclick=async()=>{
+  const fs=p.get();if(fs.length<2){say(m,'Add at least two PDFs.',1);return}if(!needPDF(m))return;
+  try{say(m,'Merging…');const out=await PDFLib.PDFDocument.create();
+   for(const f of fs){const d=await PDFLib.PDFDocument.load(await f.arrayBuffer());(await out.copyPages(d,d.getPageIndices())).forEach(pg=>out.addPage(pg))}
+   await dl(new Blob([await out.save()],{type:'application/pdf'}),'merged.pdf',m);
+  }catch(e){say(m,'One of the PDFs could not be read. It may be password-protected.',1)}
+ };
+}},
+{id:'pdf-split',n:'Split PDF',i:'✂️',c:'PDF',d:'Keep or remove chosen pages and save a new PDF.',r(b){
+ b.innerHTML='<input type="file" id="f" accept="application/pdf" aria-label="Choose a PDF"><div class="info" id="in" style="margin-top:8px"></div><div class="row"><select id="md" aria-label="Mode"><option value="keep">Keep these pages</option><option value="drop">Remove these pages</option></select><input type="text" id="rg" placeholder="Pages, e.g. 1-3, 5, 8-" aria-label="Pages"><button class="btn" id="go" type="button">Save PDF</button></div>'+MSG;
+ const m=$('.msg',b),f=$('#f',b);
+ f.onchange=async()=>{const x=f.files[0];$('#in',b).textContent='';if(!x||typeof PDFLib==='undefined')return;try{const d=await PDFLib.PDFDocument.load(await x.arrayBuffer());$('#in',b).textContent=x.name+': '+d.getPageCount()+' pages'}catch(e){$('#in',b).textContent='Could not read this PDF.'}};
+ $('#go',b).onclick=async()=>{
+  const x=f.files[0];if(!x){say(m,'Choose a PDF first.',1);return}if(!needPDF(m))return;
+  try{const d=await PDFLib.PDFDocument.load(await x.arrayBuffer()),n=d.getPageCount();let ix=ranges($('#rg',b).value,n);
+   if($('#md',b).value==='drop'){const s=new Set(ix);ix=[];for(let i=0;i<n;i++)if(!s.has(i))ix.push(i)}
+   if(!ix.length){say(m,'No valid pages selected (this PDF has '+n+').',1);return}
+   const out=await PDFLib.PDFDocument.create();(await out.copyPages(d,ix)).forEach(pg=>out.addPage(pg));
+   await dl(new Blob([await out.save()],{type:'application/pdf'}),'extracted.pdf',m);
+  }catch(e){say(m,'Could not process this PDF.',1)}
+ };
+}},
+{id:'images-to-pdf',n:'Images to PDF',i:'🖼️',c:'PDF',d:'Turn JPG, PNG or WebP images into one PDF, in any order.',r(b){
+ b.innerHTML='<div id="pk"></div><div class="row"><select id="pg" aria-label="Page size"><option value="fit">A4 page, image fitted</option><option value="orig">Page matches image size</option></select><select id="ql" aria-label="Quality"><option value=".92">High quality</option><option value=".8">Smaller file</option></select><button class="btn" id="go" type="button">Create PDF</button></div>'+MSG;
+ const m=$('.msg',b),p=picker('image/*','JPG, PNG or WebP. Use the arrows to set the order.');$('#pk',b).appendChild(p.el);
+ $('#go',b).onclick=async()=>{
+  const fs=p.get();if(!fs.length){say(m,'Add at least one image.',1);return}if(!needPDF(m))return;
+  try{say(m,'Building…');const out=await PDFLib.PDFDocument.create(),q=+$('#ql',b).value;
+   for(const f of fs){
+    const im=await img(f),s=Math.min(1,2000/Math.max(im.width,im.height)),w=Math.round(im.width*s),h=Math.round(im.height*s);
+    const by=await (await blob(cv(im,w,h,1),'image/jpeg',q)).arrayBuffer(),e=await out.embedJpg(by);
+    if($('#pg',b).value==='fit'){const L=w>h,PW=L?841.89:595.28,PH=L?595.28:841.89,sc=Math.min((PW-48)/w,(PH-48)/h),dw=w*sc,dh=h*sc;out.addPage([PW,PH]).drawImage(e,{x:(PW-dw)/2,y:(PH-dh)/2,width:dw,height:dh})}
+    else out.addPage([w,h]).drawImage(e,{x:0,y:0,width:w,height:h});
+   }
+   await dl(new Blob([await out.save()],{type:'application/pdf'}),'images.pdf',m);
+  }catch(e){say(m,'Could not read one of the images.',1)}
+ };
+}},
+{id:'pdf-rotate',n:'Rotate PDF',i:'🔃',c:'PDF',d:'Rotate every page of a PDF.',r(b){
+ b.innerHTML='<input type="file" id="f" accept="application/pdf" aria-label="Choose a PDF"><div class="row"><select id="d" aria-label="Rotation"><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">90° counter-clockwise</option></select><button class="btn" id="go" type="button">Rotate &amp; save</button></div>'+MSG;
+ const m=$('.msg',b);
+ $('#go',b).onclick=async()=>{const f=$('#f',b).files[0];if(!f){say(m,'Choose a PDF first.',1);return}if(!needPDF(m))return;
+  try{const d=await PDFLib.PDFDocument.load(await f.arrayBuffer()),a=+$('#d',b).value;d.getPages().forEach(p=>{p.setRotation(PDFLib.degrees((p.getRotation().angle+a)%360))});await dl(new Blob([await d.save()],{type:'application/pdf'}),'rotated.pdf',m)}catch(e){say(m,'Could not process this PDF.',1)}};
+}},
+{id:'pdf-watermark',n:'PDF Watermark',i:'💧',c:'PDF',d:'Stamp text across every page of a PDF.',r(b){
+ b.innerHTML='<input type="file" id="f" accept="application/pdf" aria-label="Choose a PDF"><div class="row"><input type="text" id="w" value="CONFIDENTIAL" placeholder="Watermark text" aria-label="Watermark text"><button class="btn" id="go" type="button">Add &amp; save</button></div>'+MSG;
+ const m=$('.msg',b);
+ $('#go',b).onclick=async()=>{const f=$('#f',b).files[0],tx=$('#w',b).value.trim();if(!f||!tx){say(m,'Choose a PDF and enter text.',1);return}if(!needPDF(m))return;
+  try{const d=await PDFLib.PDFDocument.load(await f.arrayBuffer()),fn=await d.embedFont(PDFLib.StandardFonts.HelveticaBold),u=fn.widthOfTextAtSize(tx,1);
+   d.getPages().forEach(p=>{const s=p.getSize(),zz=Math.min(s.height/8,s.width*.9/u);p.drawText(tx,{x:(s.width-zz*u)/2,y:s.height/2,size:zz,font:fn,color:PDFLib.rgb(.55,.55,.55),opacity:.35})});
+   await dl(new Blob([await d.save()],{type:'application/pdf'}),'watermarked.pdf',m);
+  }catch(e){say(m,'Could not add text. Use plain letters and numbers.',1)}};
+}},
+{id:'image-compressor',n:'Image Compressor',i:'🗜️',c:'Image',d:'Shrink JPG, PNG and WebP files with adjustable quality.',r(b){
+ b.innerHTML='<input type="file" id="f" accept="image/*" aria-label="Choose an image"><div class="row"><div class="fld"><label>Quality: <b id="qv">70</b>%<input type="range" id="q" min="10" max="100" value="70"></label></div><select id="fm" aria-label="Output format"><option value="image/jpeg">JPEG</option><option value="image/webp">WebP</option></select><input type="number" id="mw" placeholder="Max width (px)" min="50" aria-label="Max width"></div><div class="row"><button class="btn" id="go" type="button">Compress</button><button class="btn sec" id="sv" type="button" disabled>Save</button></div><div class="out" id="o">Choose an image to begin.</div><img id="pv" alt="Compressed preview" hidden style="max-height:220px;border-radius:10px">'+MSG;
+ const m=$('.msg',b),o=$('#o',b),pv=$('#pv',b);let res,nm,purl=null;
+ $('#q',b).oninput=function(){$('#qv',b).textContent=this.value};
+ $('#go',b).onclick=async()=>{const f=$('#f',b).files[0];if(!f){say(m,'Choose an image first.',1);return}
+  try{const im=await img(f),mw=parseInt($('#mw',b).value,10),s=mw&&mw<im.width?mw/im.width:1,t=$('#fm',b).value;
+   res=await blob(cv(im,Math.round(im.width*s),Math.round(im.height*s),t==='image/jpeg'),t,$('#q',b).value/100);
+   nm=f.name.replace(/\.[^.]+$/,'')+'-compressed.'+ext(t);
+   o.textContent=sz(f.size)+' → '+sz(res.size)+' ('+(res.size<f.size?Math.round((1-res.size/f.size)*100)+'% smaller':'not smaller, try lower quality or a smaller width')+')';
+   if(purl)URL.revokeObjectURL(purl);purl=URL.createObjectURL(res);pv.src=purl;pv.hidden=false;$('#sv',b).disabled=false;say(m,'');
+  }catch(e){say(m,'Could not read this image.',1)}};
+ $('#sv',b).onclick=()=>dl(res,nm,m);
+}},
+{id:'image-converter',n:'Image Converter',i:'🔄',c:'Convert',d:'Convert images between PNG, JPG and WebP.',r(b){
+ b.innerHTML='<input type="file" id="f" accept="image/*" aria-label="Choose an image"><div class="row"><select id="fm" aria-label="Output format"><option value="image/png">PNG</option><option value="image/jpeg">JPG</option><option value="image/webp">WebP</option></select><button class="btn" id="go" type="button">Convert &amp; save</button></div>'+MSG;
+ const m=$('.msg',b);
+ $('#go',b).onclick=async()=>{const f=$('#f',b).files[0];if(!f){say(m,'Choose an image first.',1);return}
+  try{const im=await img(f),t=$('#fm',b).value,r=await blob(cv(im,im.width,im.height,t==='image/jpeg'),t,.92);await dl(r,f.name.replace(/\.[^.]+$/,'')+'.'+ext(t),m)}catch(e){say(m,'Could not convert this image.',1)}};
+}},
+{id:'image-resizer',n:'Image Resizer',i:'📐',c:'Image',d:'Resize images to an exact width and height.',r(b){
+ b.innerHTML='<input type="file" id="f" accept="image/*" aria-label="Choose an image"><div class="row"><input type="number" id="w" placeholder="Width (px)" min="1" aria-label="Width"><input type="number" id="h" placeholder="Height (px, optional)" min="1" aria-label="Height"><select id="fm" aria-label="Output format"><option value="image/png">PNG</option><option value="image/jpeg">JPG</option><option value="image/webp">WebP</option></select></div><p class="info" style="margin:0">Fill only one size to keep the original proportions.</p><div class="row"><button class="btn" id="go" type="button">Resize &amp; save</button></div>'+MSG;
+ const m=$('.msg',b);
+ $('#go',b).onclick=async()=>{const f=$('#f',b).files[0];if(!f){say(m,'Choose an image first.',1);return}
+  let w=parseInt($('#w',b).value,10),h=parseInt($('#h',b).value,10);if(!w&&!h){say(m,'Enter a width or height.',1);return}
+  try{const im=await img(f),t=$('#fm',b).value;if(!w)w=Math.round(im.width*h/im.height);if(!h)h=Math.round(im.height*w/im.width);
+   await dl(await blob(cv(im,w,h,t==='image/jpeg'),t,.92),f.name.replace(/\.[^.]+$/,'')+'-'+w+'x'+h+'.'+ext(t),m);
+  }catch(e){say(m,'Could not resize this image.',1)}};
+}},
+{id:'csv-json',n:'CSV ⇄ JSON',i:'🔀',c:'Convert',d:'Convert spreadsheet CSV data to JSON and back.',r(b){
+ b.innerHTML='<textarea id="t" placeholder="Paste CSV or a JSON array of objects…"></textarea><div class="row"><select id="dl" aria-label="Delimiter"><option value=",">Comma</option><option value=";">Semicolon</option><option value="&#9;">Tab</option></select><button class="btn" id="a" type="button">CSV → JSON</button><button class="btn" id="z" type="button">JSON → CSV</button><button class="btn sec" id="sv" type="button">Save file</button></div>'+MSG;
+ const t=$('#t',b),m=$('.msg',b);let kind='json';
+ function parse(s,D){const r=[];let row=[],f='',q=0;for(let i=0;i<s.length;i++){const c=s[i];if(q){if(c==='"'){if(s[i+1]==='"'){f+='"';i++}else q=0}else f+=c}else if(c==='"')q=1;else if(c===D){row.push(f);f=''}else if(c==='\n'||c==='\r'){if(c==='\r'&&s[i+1]==='\n')i++;row.push(f);r.push(row);row=[];f=''}else f+=c}if(f||row.length){row.push(f);r.push(row)}return r}
+ $('#a',b).onclick=()=>{const r=parse(t.value.trim(),$('#dl',b).value);if(r.length<2){say(m,'Need a header row and at least one data row.',1);return}
+  t.value=JSON.stringify(r.slice(1).map(x=>{const o={};r[0].forEach((h,i)=>{o[h]=x[i]===undefined?'':x[i]});return o}),null,2);kind='json';say(m,'Converted ✓')};
+ $('#z',b).onclick=()=>{try{const a=JSON.parse(t.value),D=$('#dl',b).value;if(!Array.isArray(a))throw 0;const h=[];a.forEach(o=>{Object.keys(o).forEach(k=>{if(h.indexOf(k)<0)h.push(k)})});
+  const e=v=>{v=v==null?'':typeof v==='object'?JSON.stringify(v):String(v);return (v.indexOf(D)>-1||/["\n\r]/.test(v))?'"'+v.replace(/"/g,'""')+'"':v};
+  t.value=[h.map(e).join(D)].concat(a.map(o=>h.map(k=>e(o[k])).join(D))).join('\n');kind='csv';say(m,'Converted ✓')}catch(x){say(m,'Input must be a JSON array of objects.',1)}};
+ $('#sv',b).onclick=()=>{if(!t.value){say(m,'Nothing to save.',1);return}dl(t.value,'converted.'+kind,m)};
+}},
+{id:'qr-generator',n:'QR Code Generator',i:'📱',c:'Generate',d:'QR codes for links, text, Wi-Fi, UPI payments and WhatsApp.',r(b){
+ const T={Text:[['Text or URL','https://example.com']],WiFi:[['Network name',''],['Password',''],['Security','','select',['WPA','WEP','nopass']]],UPI:[['UPI ID','','name@bank'],['Payee name',''],['Amount (optional)',''],['Note (optional)','']],WhatsApp:[['Phone with country code','','919876543210'],['Message (optional)','']]};
+ b.innerHTML='<div class="row"><select id="ty" aria-label="QR type">'+Object.keys(T).map(k=>'<option>'+k+'</option>').join('')+'</select><select id="sz" aria-label="Size"><option value="256">256 px</option><option value="512" selected>512 px</option><option value="1024">1024 px</option></select><input type="color" id="fg" value="#000000" aria-label="QR color" style="max-width:70px"></div><div id="fl"></div><canvas id="c" style="max-width:100%;height:auto;border-radius:10px;border:1px solid var(--bd)"></canvas><div class="row"><button class="btn" id="sv" type="button">Save PNG</button></div>'+MSG;
+ const m=$('.msg',b),c=$('#c',b),fl=$('#fl',b);let drawn=false;
+ const val=i=>{const e=$('#q'+i,b);return e?e.value.trim():''};
+ const wf=s=>s.replace(/([\\;,:"])/g,'\\$1');
+ function payload(){const t=$('#ty',b).value;
+  if(t==='Text')return val(0);
+  if(!val(0))return '';
+  if(t==='WiFi')return 'WIFI:T:'+val(2)+';S:'+wf(val(0))+';'+(val(2)==='nopass'?'':'P:'+wf(val(1))+';')+';';
+  if(t==='UPI')return 'upi://pay?pa='+val(0)+'&pn='+encodeURIComponent(val(1))+'&cu=INR'+(val(2)?'&am='+encodeURIComponent(val(2)):'')+(val(3)?'&tn='+encodeURIComponent(val(3)):'');
+  return 'https://wa.me/'+val(0).replace(/\D/g,'')+(val(1)?'?text='+encodeURIComponent(val(1)):'');
+ }
+ function draw(){
+  const p=payload(),x=c.getContext('2d');
+  if(!p){drawn=false;c.width=c.height=1;say(m,'Fill in the first field to see your QR code.');return}
+  try{const q=qrcode(0,'M');q.addData(p);q.make();const n=q.getModuleCount(),mg=2,cell=Math.max(1,Math.floor(+$('#sz',b).value/(n+mg*2))),s=cell*(n+mg*2);
+   c.width=c.height=s;x.fillStyle='#fff';x.fillRect(0,0,s,s);x.fillStyle=$('#fg',b).value;
+   for(let r=0;r<n;r++)for(let k=0;k<n;k++)if(q.isDark(r,k))x.fillRect((k+mg)*cell,(r+mg)*cell,cell,cell);
+   drawn=true;say(m,'');
+  }catch(e){drawn=false;say(m,'That is too long for a QR code, or the QR library did not load.',1)}
+ }
+ function fields(){const t=$('#ty',b).value;fl.innerHTML='';
+  T[t].forEach((f,i)=>{const d=el('div',{'class':'fld'});
+   if(f[2]==='select'){d.innerHTML='<label>'+f[0]+'<select id="q'+i+'">'+f[3].map(o=>'<option>'+o+'</option>').join('')+'</select></label>'}
+   else{d.innerHTML='<label>'+f[0]+'<input type="text" id="q'+i+'" placeholder="'+(f[2]||'')+'"></label>';$('input',d).value=f[1]}
+   fl.appendChild(d);$('#q'+i,b).oninput=draw;$('#q'+i,b).onchange=draw});draw()}
+ $('#ty',b).onchange=fields;$('#sz',b).onchange=draw;$('#fg',b).oninput=draw;
+ $('#sv',b).onclick=async()=>{if(!drawn){say(m,'Nothing to save yet.',1);return}await dl(await blob(c,'image/png'),'qr-code.png',m)};
+ fields();
+}},
+{id:'percentage-calculator',n:'Percentage Calculator',i:'％',c:'Calculators',d:'Percent of, percent share and percent change.',r(b){
+ calc(b,[['A',20],['B',150]],v=>{const a=v[0],y=v[1];if(isNaN(a)||isNaN(y))return '–';const r=n=>isFinite(n)?+n.toFixed(4):'–';
+  return a+'% of '+y+' = <b>'+r(a*y/100)+'</b><br>'+a+' is <b>'+r(a/y*100)+'%</b> of '+y+'<br>Change from '+a+' to '+y+' = <b>'+r((y-a)/a*100)+'%</b>'});
+}},
+{id:'bmi-calculator',n:'BMI Calculator',i:'⚖️',c:'Calculators',d:'Body mass index from height and weight.',r(b){
+ calc(b,[['Height (cm)',170],['Weight (kg)',65]],v=>{const h=v[0]/100,i=v[1]/(h*h);if(!isFinite(i)||i<=0)return '–';
+  return 'BMI <b>'+i.toFixed(1)+'</b> — '+(i<18.5?'Underweight':i<25?'Normal range':i<30?'Overweight':'Obese')+'<br>Weight for a BMI of 18.5 to 24.9 at this height: <b>'+(18.5*h*h).toFixed(1)+' to '+(24.9*h*h).toFixed(1)+' kg</b><br><small>A general screening guide, not medical advice.</small>'});
+}},
+{id:'loan-emi-calculator',n:'Loan EMI Calculator',i:'🏦',c:'Calculators',d:'Monthly EMI, total interest and total payment.',r(b){
+ calc(b,[['Loan amount',500000],['Interest rate (% per year)',9],['Tenure (years)',5]],v=>{const P=v[0],mr=v[1]/1200,n=v[2]*12;if(!(P>0)||!(n>0)||isNaN(mr))return '–';
+  const e=mr?P*mr*Math.pow(1+mr,n)/(Math.pow(1+mr,n)-1):P/n;return 'Monthly EMI: <b>'+fmt(e)+'</b><br>Total interest: <b>'+fmt(e*n-P)+'</b><br>Total payment: <b>'+fmt(e*n)+'</b>'+bar(P,e*n-P,'Principal','Interest')});
+}},
+{id:'age-calculator',n:'Age Calculator',i:'🎂',c:'Calculators',d:'Exact age in years, months and days.',r(b){
+ calc(b,[['Date of birth','2000-01-01','date']],v=>{const p=String(v[0]).split('-').map(Number);if(p.length<3||p.some(isNaN))return 'Pick a valid date of birth';
+  const d=new Date(p[0],p[1]-1,p[2]),n=new Date(),t=new Date(n.getFullYear(),n.getMonth(),n.getDate());if(d>t)return 'Pick a valid date of birth';
+  let y=t.getFullYear()-d.getFullYear(),mo=t.getMonth()-d.getMonth(),da=t.getDate()-d.getDate();if(da<0){mo--;da+=new Date(t.getFullYear(),t.getMonth(),0).getDate()}if(mo<0){y--;mo+=12}
+  const nb=new Date(t.getFullYear(),d.getMonth(),d.getDate());if(nb<t)nb.setFullYear(t.getFullYear()+1);
+  return '<b>'+y+'</b> years, <b>'+mo+'</b> months, <b>'+da+'</b> days<br>Next birthday in '+Math.round((nb-t)/864e5)+' days'});
+}},
+{id:'gst-calculator',n:'GST Calculator',i:'🧾',c:'Calculators',d:'Add or remove GST from any amount, with the CGST and SGST split.',r(b){
+ b.innerHTML='<div class="row"><div class="fld"><label>Amount<input type="number" id="a" value="1000" step="any"></label></div><div class="fld"><label>GST rate (%)<input type="number" id="r" value="18" step="any"></label></div></div><div class="row" id="qr"></div><div class="out" id="o"></div>';
+ const a=$('#a',b),r=$('#r',b),o=$('#o',b);
+ function up(){const x=parseFloat(a.value),y=parseFloat(r.value);if(isNaN(x)||isNaN(y)){o.textContent='–';return}
+  const g=x*y/100,base=x*100/(100+y);
+  o.innerHTML='<b>Add GST to this amount</b><br>GST: '+fmt(g)+' (CGST '+fmt(g/2)+' + SGST '+fmt(g/2)+') · Total: <b>'+fmt(x+g)+'</b><br><br><b>Amount already includes GST</b><br>Base price: <b>'+fmt(base)+'</b> · GST: '+fmt(x-base)+' (CGST '+fmt((x-base)/2)+' + SGST '+fmt((x-base)/2)+')'}
+ [0,3,5,12,18,28,40].forEach(n=>{const x=el('button',{'class':'btn sec sm',type:'button'},n+'%');x.onclick=()=>{r.value=n;up()};$('#qr',b).appendChild(x)});
+ a.oninput=r.oninput=up;up();
+}},
+{id:'sip-calculator',n:'SIP Calculator',i:'📈',c:'Calculators',d:'Estimate the future value of monthly investments.',r(b){
+ calc(b,[['Monthly investment',5000],['Expected return (% per year)',12],['Duration (years)',10]],v=>{const P=v[0],i=v[1]/1200,n=v[2]*12;if(!(P>0)||!(n>0)||isNaN(i))return '–';
+  const fv=i?P*((Math.pow(1+i,n)-1)/i)*(1+i):P*n,inv=P*n;return 'Invested: <b>'+fmt(inv)+'</b><br>Estimated returns: <b>'+fmt(fv-inv)+'</b><br>Future value: <b>'+fmt(fv)+'</b>'+bar(inv,fv-inv,'Invested','Returns')+'<br><small>Projection only. Actual returns vary.</small>'});
+}},
+{id:'date-difference',n:'Date Difference',i:'📅',c:'Calculators',d:'Days, weeks, months and weekdays between two dates.',r(b){
+ const today=new Date().toISOString().slice(0,10);
+ calc(b,[['From',today.slice(0,4)+'-01-01','date'],['To',today,'date']],v=>{const a=new Date(v[0]),z=new Date(v[1]);if(isNaN(a)||isNaN(z))return 'Pick two dates';const d=Math.round(Math.abs(z-a)/864e5);
+  let wd='';if(d<=40000){let n=0;const s=new Date(Math.min(a,z));for(let i=0;i<=d;i++){const g=s.getUTCDay();if(g&&g!==6)n++;s.setUTCDate(s.getUTCDate()+1)}wd='<br>Weekdays (Mon–Fri) including both dates: '+n}
+  return '<b>'+d+'</b> days<br>'+Math.floor(d/7)+' weeks, '+d%7+' days<br>≈ '+(d/30.4375).toFixed(1)+' months · '+(d/365.25).toFixed(2)+' years'+wd});
+}},
+{id:'discount-calculator',n:'Discount Calculator',i:'🏷️',c:'Calculators',d:'Final price and savings after one or two discounts.',r(b){
+ calc(b,[['Original price',2499],['Discount (%)',20],['Extra discount (%)',0]],v=>{const p=v[0],d=v[1],e=v[2]||0;if(isNaN(p)||isNaN(d))return '–';const f=p*(1-d/100)*(1-e/100);return 'You save: <b>'+fmt(p-f)+'</b> ('+(p?((p-f)/p*100).toFixed(1):0)+'% in total)<br>Final price: <b>'+fmt(f)+'</b>'});
+}},
+{id:'compound-interest',n:'Compound Interest Calculator',i:'💹',c:'Calculators',d:'See how a lump sum grows over time.',r(b){
+ calc(b,[['Principal',100000],['Interest rate (% per year)',7],['Years',10],['Compounded per year',4]],v=>{const P=v[0],r=v[1]/100,t=v[2],n=v[3];if(!(P>0)||!(t>0)||!(n>0)||isNaN(r))return '–';const A=P*Math.pow(1+r/n,n*t);
+  return 'Final amount: <b>'+fmt(A)+'</b><br>Interest earned: <b>'+fmt(A-P)+'</b>'+bar(P,A-P,'Principal','Interest')});
+}},
+{id:'number-to-words',n:'Number to Words',i:'🔤',c:'Calculators',d:'Write amounts in words (lakh/crore) for cheques and invoices.',r(b){
+ const O='one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen'.split(' '),T='ten twenty thirty forty fifty sixty seventy eighty ninety'.split(' ');
+ const two=n=>n<20?(n?O[n-1]:''):T[Math.floor(n/10)-1]+(n%10?' '+O[n%10-1]:'');
+ const three=n=>(n>99?O[Math.floor(n/100)-1]+' hundred'+(n%100?' ':''):'')+two(n%100);
+ function W(n){if(n===0)return 'zero';const p=[];[[1e7,'crore'],[1e5,'lakh'],[1e3,'thousand']].forEach(x=>{const q=Math.floor(n/x[0]);if(q){p.push((x[0]===1e7?W(q):two(q))+' '+x[1]);n%=x[0]}});if(n)p.push(three(n));return p.join(' ')}
+ calc(b,[['Amount',125750.5]],v=>{const a=v[0];if(isNaN(a)||a<0||a>=1e14)return 'Enter an amount below 1,00,00,00,00,000';let r=Math.floor(a),ps=Math.round((a-r)*100);if(ps===100){r++;ps=0}
+  return '<b>Rupees '+W(r)+(ps?' and '+W(ps)+' paise':'')+' only</b><br><small>'+r.toLocaleString('en-IN')+(ps?'.'+String(ps).padStart(2,'0'):'')+'</small>'});
+}},
+{id:'bill-splitter',n:'Bill Splitter',i:'🍽️',c:'Calculators',d:'Split a bill with tip between friends.',r(b){
+ calc(b,[['Bill total',2400],['Tip (%)',5],['People',4]],v=>{const a=v[0],t=v[1],p=Math.floor(v[2]);if(isNaN(a)||isNaN(t)||!(p>0))return '–';const tot=a*(1+t/100);return 'Total with tip: <b>'+fmt(tot)+'</b><br>Each person pays: <b>'+fmt(tot/p)+'</b>'});
+}},
+{id:'line-tools',n:'Sort & Dedupe Lines',i:'📋',c:'Text',d:'Sort, reverse and remove duplicate lines.',r(b){
+ b.innerHTML='<textarea id="t" class="sans" placeholder="One item per line…"></textarea><div class="row" id="bt"></div><div class="row"><button class="btn sec" id="cp" type="button">Copy</button></div>'+MSG;
+ const t=$('#t',b),m=$('.msg',b);
+ const A={'Sort A–Z':a=>a.sort((x,y)=>x.localeCompare(y)),'Sort Z–A':a=>a.sort((x,y)=>y.localeCompare(x)),'Remove duplicates':a=>a.filter((x,i)=>a.indexOf(x)===i),'Reverse':a=>a.reverse(),'Remove empty':a=>a.filter(x=>x.trim()),'Trim spaces':a=>a.map(x=>x.trim())};
+ Object.keys(A).forEach(k=>{const x=el('button',{'class':'btn sec',type:'button'},k);x.onclick=()=>{const n=t.value.split(/\r?\n/).length;t.value=A[k](t.value.split(/\r?\n/)).join('\n');say(m,n+' → '+t.value.split(/\r?\n/).length+' lines')};$('#bt',b).appendChild(x)});
+ $('#cp',b).onclick=()=>copy(t.value,m);
+}},
+{id:'find-replace',n:'Find & Replace',i:'🔁',c:'Text',d:'Replace text in bulk, with optional regex.',r(b){
+ b.innerHTML='<textarea id="t" class="sans" placeholder="Paste your text…"></textarea><div class="row"><input type="text" id="a" placeholder="Find" aria-label="Find"><input type="text" id="z" placeholder="Replace with" aria-label="Replace with"></div><div class="row"><label class="ck"><input type="checkbox" id="cs">Match case</label><label class="ck"><input type="checkbox" id="rx">Regex</label><button class="btn" id="go" type="button">Replace all</button><button class="btn sec" id="cp" type="button">Copy</button></div>'+MSG;
+ const t=$('#t',b),m=$('.msg',b),B=String.fromCharCode(92);
+ $('#go',b).onclick=()=>{const s=$('#a',b).value,z=$('#z',b).value;if(!s){say(m,'Enter text to find.',1);return}
+  try{const p=$('#rx',b).checked?s:s.split('').map(c=>'.*+?^${}()|[]'.indexOf(c)>-1||c===B?B+c:c).join('');let n=0;
+   t.value=t.value.replace(new RegExp(p,'g'+($('#cs',b).checked?'':'i')),()=>{n++;return z});say(m,n+' replacement(s) made')}catch(e){say(m,'Invalid pattern: '+e.message,1)}};
+ $('#cp',b).onclick=()=>copy(t.value,m);
+}},
+{id:'text-diff',n:'Text Compare',i:'🔍',c:'Text',d:'Spot the differences between two texts, line by line.',r(b){
+ b.innerHTML='<div class="row"><textarea id="a" placeholder="Original text" aria-label="Original text"></textarea><textarea id="z" placeholder="Changed text" aria-label="Changed text"></textarea></div><div class="row"><button class="btn" id="go" type="button">Compare</button></div><div class="out mono" id="o" style="white-space:pre-wrap;word-break:normal">Differences appear here: <span style="color:var(--ok)">+ added</span>, <span style="color:var(--err)">− removed</span>.</div>';
+ $('#go',b).onclick=()=>{const a=$('#a',b).value.split(/\r?\n/),z=$('#z',b).value.split(/\r?\n/),o=$('#o',b);if(a.length>1500||z.length>1500){o.textContent='Texts are too long (max 1500 lines)';return}
+  const n=a.length,m=z.length,L=[];let i,j;for(i=0;i<=n;i++)L[i]=new Array(m+1).fill(0);
+  for(i=n-1;i>=0;i--)for(j=m-1;j>=0;j--)L[i][j]=a[i]===z[j]?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);
+  o.textContent='';let same=0;const add=(c,s,col)=>{const d=document.createElement('div');d.textContent=c+' '+s;if(col)d.style.color=col;o.appendChild(d)};
+  i=0;j=0;while(i<n&&j<m){if(a[i]===z[j]){same++;add(' ',a[i]);i++;j++}else if(L[i+1][j]>=L[i][j+1]){add('−',a[i++],'var(--err)')}else add('+',z[j++],'var(--ok)')}
+  while(i<n)add('−',a[i++],'var(--err)');while(j<m)add('+',z[j++],'var(--ok)');if(same===n&&n===m)o.textContent='The two texts are identical ✓'};
+}},
+{id:'markdown-previewer',n:'Markdown Previewer',i:'✍️',c:'Text',d:'Write Markdown and see it rendered live.',r(b){
+ b.innerHTML='<textarea id="t"># Hello\n\nThis is **bold**, *italic* and `code`.\n\n- First item\n- Second item\n\n1. Step one\n2. Step two\n\n[A link](https://example.com)</textarea><div class="out rich" id="p"></div>';
+ const t=$('#t',b),p=$('#p',b);const up=()=>{p.innerHTML=md(t.value,0)};t.oninput=up;up();
+}},
+{id:'image-to-base64',n:'Image to Base64',i:'🧬',c:'Developer',d:'Turn an image into a Base64 data URL.',r(b){
+ b.innerHTML='<input type="file" id="f" accept="image/*" aria-label="Choose an image"><textarea id="t" readonly placeholder="Data URL appears here…" style="margin-top:10px"></textarea><div class="row"><button class="btn sec" id="cp" type="button">Copy</button></div>'+MSG;
+ const t=$('#t',b),m=$('.msg',b);
+ $('#f',b).onchange=function(){const f=this.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{t.value=r.result;say(m,sz(f.size)+' image → '+sz(r.result.length)+' of text')};r.onerror=()=>{say(m,'Could not read the file.',1)};r.readAsDataURL(f)};
+ $('#cp',b).onclick=()=>copy(t.value,m);
+}},
+{id:'hash-generator',n:'Hash Generator',i:'#️⃣',c:'Security',d:'SHA-1, SHA-256, SHA-384 and SHA-512 hashes for text or files.',r(b){
+ b.innerHTML='<textarea id="t" placeholder="Text to hash…"></textarea><div class="row"><input type="file" id="f" aria-label="Or choose a file to hash"></div><div class="row" id="bt"></div><div class="out mono" id="o">–</div><div class="row"><button class="btn sec" id="cp" type="button">Copy</button></div>'+MSG;
+ const m=$('.msg',b),o=$('#o',b);
+ ['SHA-1','SHA-256','SHA-384','SHA-512'].forEach(a=>{const x=el('button',{'class':'btn',type:'button'},a);x.onclick=async()=>{try{const f=$('#f',b).files[0],data=f?await f.arrayBuffer():new TextEncoder().encode($('#t',b).value),h=await crypto.subtle.digest(a,data);o.textContent=Array.from(new Uint8Array(h)).map(c=>c.toString(16).padStart(2,'0')).join('');say(m,f?'Hashed file: '+f.name:'')}catch(e){say(m,'Hashing is not available here.',1)}};$('#bt',b).appendChild(x)});
+ $('#cp',b).onclick=()=>copy(o.textContent,m);
+}},
+{id:'uuid-generator',n:'UUID Generator',i:'🆔',c:'Developer',d:'Generate random v4 UUIDs in bulk.',r(b){
+ b.innerHTML='<div class="row"><input type="number" id="n" value="5" min="1" max="100" aria-label="How many"><button class="btn" id="g" type="button">Generate</button><button class="btn sec" id="cp" type="button">Copy</button></div><textarea id="t" readonly></textarea>'+MSG;
+ const t=$('#t',b),m=$('.msg',b);
+ const gen=()=>{const n=Math.min(100,Math.max(1,parseInt($('#n',b).value,10)||1)),a=[];for(let i=0;i<n;i++)a.push(crypto.randomUUID());t.value=a.join('\n')};
+ $('#g',b).onclick=gen;$('#cp',b).onclick=()=>copy(t.value,m);gen();
+}},
+{id:'timestamp-converter',n:'Timestamp Converter',i:'⏱️',c:'Developer',d:'Unix time to readable date and back.',r(b){
+ const now=new Date(),p2=n=>String(n).padStart(2,'0');
+ calc(b,[['Unix timestamp (seconds or milliseconds)',Math.floor(Date.now()/1000),'number'],['Or a date, e.g. 2026-11-10 14:30',now.getFullYear()+'-'+p2(now.getMonth()+1)+'-'+p2(now.getDate())+' '+p2(now.getHours())+':'+p2(now.getMinutes()),'text']],v=>{
+  const s=v[0];let o='';
+  if(!isNaN(s)){const d=new Date(s>1e11?s:s*1000);o+='UTC: <b>'+d.toUTCString()+'</b><br>Local: <b>'+d.toLocaleString()+'</b><br>'}
+  const p=new Date(v[1]);if(!isNaN(p))o+='<br>'+esc(v[1])+' = <b>'+Math.floor(p/1000)+'</b> (seconds), <b>'+p.getTime()+'</b> (ms)';return o||'–'});
+}},
+{id:'regex-tester',n:'Regex Tester',i:'🔎',c:'Developer',d:'Test regular expressions with highlighted matches.',r(b){
+ b.innerHTML='<div class="row"><input type="text" id="p" value="[a-z]+@[a-z.]+" placeholder="Pattern" aria-label="Pattern"><input type="text" id="fl" value="g" style="max-width:90px" placeholder="Flags" aria-label="Flags"></div><textarea id="t">Write to hello@example.com or support@site.org</textarea><div class="out" id="o"></div><div class="out mono" id="hl" style="white-space:pre-wrap;word-break:normal"></div><div class="row" id="ar"></div>'+MSG;
+ const m=$('.msg',b);
+ function up(){const o=$('#o',b),h=$('#hl',b);
+  try{const re=new RegExp($('#p',b).value,$('#fl',b).value),t=$('#t',b).value,ms=[];let x;
+   if(re.global||re.sticky){while((x=re.exec(t))&&ms.length<500){ms.push({i:x.index,s:x[0]});if(x[0]==='')re.lastIndex++}}else{x=re.exec(t);if(x)ms.push({i:x.index,s:x[0]})}
+   o.textContent=ms.length+' match(es)';let html='',pos=0;ms.forEach(q=>{if(q.i<pos)return;html+=esc(t.slice(pos,q.i))+'<mark>'+esc(q.s)+'</mark>';pos=q.i+q.s.length});h.innerHTML=html+esc(t.slice(pos));
+  }catch(e){o.textContent='Invalid pattern: '+e.message;h.textContent=''}}
+ ['p','fl','t'].forEach(i=>{$('#'+i,b).oninput=up});up();
+ askBtn($('#ar',b),m,()=>$('#p',b).value,'Explain this regular expression step by step and suggest improvements: ','✦ Explain with Claude');
+}},
+{id:'lorem-ipsum',n:'Lorem Ipsum Generator',i:'📄',c:'Generate',d:'Placeholder text for designs and mockups.',r(b){
+ b.innerHTML='<div class="row"><input type="number" id="n" value="3" min="1" max="20" aria-label="Paragraphs"><button class="btn" id="g" type="button">Generate paragraphs</button><button class="btn sec" id="cp" type="button">Copy</button></div><textarea id="t" readonly></textarea>'+MSG;
+ const W='lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum fugiat nulla pariatur'.split(' '),t=$('#t',b),m=$('.msg',b);
+ const r=()=>W[Math.floor(Math.random()*W.length)];
+ function sen(){const n=8+Math.floor(Math.random()*8),a=[];for(let i=0;i<n;i++)a.push(r());const s=a.join(' ');return s[0].toUpperCase()+s.slice(1)+'.'}
+ function gen(){const n=Math.min(20,Math.max(1,parseInt($('#n',b).value,10)||1)),p=[];for(let i=0;i<n;i++){const s=[];for(let j=0;j<4+Math.floor(Math.random()*3);j++)s.push(sen());p.push(s.join(' '))}t.value=p.join('\n\n')}
+ $('#g',b).onclick=gen;$('#cp',b).onclick=()=>copy(t.value,m);gen();
+}},
+{id:'stopwatch-timer',n:'Stopwatch & Timer',i:'⏲️',c:'Productivity',d:'A stopwatch and a countdown timer.',r(b){
+ b.innerHTML='<div class="out big" id="d">00:00.0</div><div class="row"><button class="btn" id="s" type="button">Start</button><button class="btn sec" id="r" type="button">Reset</button></div><div class="row"><input type="number" id="cm" value="5" min="0" step="any" aria-label="Minutes"><button class="btn sec" id="cs" type="button">Start countdown (minutes)</button></div>'+MSG;
+ const d=$('#d',b),m=$('.msg',b);let run=0,t0=0,acc=0,mode='sw',target=0;
+ const pad=n=>String(n).padStart(2,'0'),cur=()=>run?acc+Date.now()-t0:acc;
+ const iv=setInterval(()=>{if(!document.body.contains(d)){clearInterval(iv);return}
+  const v=mode==='sw'?cur():Math.max(0,target-cur()),s=Math.floor(v/1000);d.textContent=pad(Math.floor(s/60))+':'+pad(s%60)+'.'+Math.floor(v%1000/100);
+  $('#s',b).textContent=run?'Pause':'Start';if(mode==='cd'&&run&&v<=0){run=0;acc=target;beep();say(m,'Time is up!')}},100);
+ $('#s',b).onclick=()=>{if(!run){t0=Date.now();run=1}else{acc+=Date.now()-t0;run=0}say(m,'')};
+ $('#r',b).onclick=()=>{run=0;acc=0;mode='sw';say(m,'')};
+ $('#cs',b).onclick=()=>{const x=parseFloat($('#cm',b).value);if(!(x>0)){say(m,'Enter minutes above 0.',1);return}mode='cd';target=x*60000;acc=0;t0=Date.now();run=1;say(m,'')};
+}},
+{id:'contrast-checker',n:'Contrast Checker',i:'🌓',c:'Design',d:'Check text and background colors against WCAG.',r(b){
+ const lum=h=>{const c=[1,3,5].map(i=>{const v=parseInt(h.slice(i,i+2),16)/255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*c[0]+.7152*c[1]+.0722*c[2]};
+ calc(b,[['Text color','#161a2b','color'],['Background','#ffffff','color']],v=>{const a=lum(v[0]),z=lum(v[1]),r=(Math.max(a,z)+.05)/(Math.min(a,z)+.05),ok=x=>r>=x?'✓ Pass':'✗ Fail';
+  return '<div style="background:'+v[1]+';color:'+v[0]+';padding:14px;border-radius:10px;margin-bottom:8px"><b>Sample text</b> — the quick brown fox</div>Contrast ratio: <b>'+r.toFixed(2)+' : 1</b><br>AA normal text: '+ok(4.5)+' · AA large text: '+ok(3)+'<br>AAA normal text: '+ok(7)});
+}},
+{id:'css-gradient',n:'CSS Gradient Generator',i:'🌈',c:'Design',d:'Build a linear or radial gradient and copy the CSS.',r(b){
+ b.innerHTML='<div class="row"><div class="fld"><label>Color 1<input type="color" id="c1" value="#5558ee"></label></div><div class="fld"><label>Color 2<input type="color" id="c2" value="#a47cff"></label></div><div class="fld"><label>Type<select id="ty"><option value="linear">Linear</option><option value="radial">Radial</option></select></label></div></div><div class="fld"><label>Angle: <b id="av">135</b>°<input type="range" id="an" min="0" max="360" value="135"></label></div><div class="sw" id="sw" style="height:130px"></div><div class="out mono" id="o"></div><div class="row"><button class="btn sec" id="cp" type="button">Copy CSS</button></div>'+MSG;
+ const m=$('.msg',b);
+ function up(){const a=$('#an',b).value,g=$('#ty',b).value==='linear'?'linear-gradient('+a+'deg, '+$('#c1',b).value+', '+$('#c2',b).value+')':'radial-gradient(circle, '+$('#c1',b).value+', '+$('#c2',b).value+')';
+  $('#av',b).textContent=a;$('#sw',b).style.background=g;$('#o',b).textContent='background: '+g+';'}
+ ['c1','c2','ty','an'].forEach(i=>{$('#'+i,b).oninput=up;$('#'+i,b).onchange=up});
+ $('#cp',b).onclick=()=>copy($('#o',b).textContent,m);up();
+}},
+{id:'teleprompter',n:'Teleprompter',i:'📺',c:'Creator',d:'Scroll your script on screen while you record.',r(b){
+ b.innerHTML='<textarea id="t" class="sans" placeholder="Paste your script…">Welcome back to the channel! Paste your own script in this box, press Start, and read along as the text scrolls. Adjust the speed and size to match how you speak.</textarea><div class="row"><div class="fld"><label>Speed: <b id="sv">3</b><input type="range" id="sp" min="1" max="10" value="3"></label></div><div class="fld"><label>Text size: <b id="zv">36</b> px<input type="range" id="fs" min="20" max="80" value="36"></label></div></div><div class="row"><button class="btn" id="go" type="button">Start</button><button class="btn sec" id="rs" type="button">Back to top</button><label class="ck"><input type="checkbox" id="mi">Mirror (for glass rigs)</label></div><div id="vw" style="height:340px;overflow:hidden;background:#000;color:#fff;border-radius:12px;text-align:center;line-height:1.5"><div id="tx" style="white-space:pre-wrap;padding:140px 24px 340px"></div></div>';
+ const t=$('#t',b),vw=$('#vw',b),tx=$('#tx',b);let run=0,pos=0;
+ function up(){tx.textContent=t.value;tx.style.fontSize=$('#fs',b).value+'px';tx.style.transform=$('#mi',b).checked?'scaleX(-1)':'none';$('#sv',b).textContent=$('#sp',b).value;$('#zv',b).textContent=$('#fs',b).value}
+ ['t','sp','fs','mi'].forEach(i=>{$('#'+i,b).oninput=up;$('#'+i,b).onchange=up});up();
+ const iv=setInterval(()=>{if(!document.body.contains(vw)){clearInterval(iv);return}if(run){pos+=+$('#sp',b).value*.6;vw.scrollTop=pos;$('#go',b).textContent='Pause'}else $('#go',b).textContent='Start'},30);
+ $('#go',b).onclick=()=>{pos=vw.scrollTop;run=!run};$('#rs',b).onclick=()=>{run=0;pos=0;vw.scrollTop=0};
+}},
+{id:'script-timer',n:'Script Timer',i:'⏳',c:'Creator',d:'Estimate how long your script takes to read aloud.',r(b){
+ b.innerHTML='<textarea id="t" class="sans" placeholder="Paste your script…"></textarea><div class="row"><div class="fld"><label>Speaking pace (words per minute)<input type="number" id="w" value="150" min="60" max="300"></label></div></div><div class="out" id="o"></div>';
+ const t=$('#t',b);
+ function up(){const w=(t.value.trim().match(/\S+/g)||[]).length,p=+$('#w',b).value||150,s=Math.round(w/p*60);$('#o',b).innerHTML='<b>'+w+'</b> words · speaking time <b>'+Math.floor(s/60)+'m '+s%60+'s</b>'+(s&&s<=60?'<br>Fits a 60-second Short or Reel ✓':'')}
+ t.oninput=up;$('#w',b).oninput=up;up();
+}},
+{id:'srt-maker',n:'Subtitle (SRT) Maker',i:'💬',c:'Creator',d:'Turn a script into timed subtitle cues.',r(b){
+ b.innerHTML='<textarea id="t" class="sans" placeholder="Paste your script…"></textarea><div class="row"><input type="number" id="w" value="150" min="60" max="300" title="Words per minute" aria-label="Words per minute"><button class="btn" id="go" type="button">Make subtitles</button><button class="btn sec" id="sv" type="button">Save .srt</button></div><textarea id="o" readonly placeholder="Subtitle cues appear here…"></textarea>'+MSG;
+ const o=$('#o',b),m=$('.msg',b);
+ const pad=(n,l)=>String(n).padStart(l||2,'0');
+ const ts=x=>{const ms=Math.round(x*1000);return pad(Math.floor(ms/36e5))+':'+pad(Math.floor(ms%36e5/6e4))+':'+pad(Math.floor(ms%6e4/1000))+','+pad(ms%1000,3)};
+ $('#go',b).onclick=()=>{const p=$('#t',b).value.replace(/\s+/g,' ').trim().match(/[^.!?]+[.!?]*/g)||[],c=[],wpm=+$('#w',b).value||150;
+  p.forEach(s=>{const w=s.trim().split(' ');for(let i=0;i<w.length;i+=12)c.push(w.slice(i,i+12).join(' '))});
+  let t=0;const r=c.map((x,i)=>{const d=Math.max(1.2,x.split(' ').length/wpm*60),s=t;t+=d;return (i+1)+'\n'+ts(s)+' --> '+ts(t)+'\n'+x+'\n'});o.value=r.join('\n');say(m,c.length?c.length+' subtitle cues':'Paste a script first.',!c.length)};
+ $('#sv',b).onclick=()=>{if(!o.value){say(m,'Nothing to save.',1);return}dl(o.value,'subtitles.srt',m)};
+}},
+{id:'social-limits',n:'Social Post Length Checker',i:'📏',c:'Creator',d:'Check your text against X, YouTube, Instagram and more.',r(b){
+ b.innerHTML='<textarea id="t" class="sans" placeholder="Paste your caption, title or post…"></textarea><div id="l" style="margin-top:10px"></div><p class="info" style="margin:8px 0 0">Counts are approximate; platforms may count links and emojis differently.</p>';
+ const L=[['YouTube title',100],['X (Twitter) post',280],['Instagram caption',2200],['TikTok caption',2200],['LinkedIn post',3000],['YouTube description',5000]];
+ function up(){const n=Array.from($('#t',b).value).length;$('#l',b).innerHTML=L.map(x=>{const over=n>x[1],c=over?'var(--err)':'var(--ok)';return '<div style="margin:8px 0"><div style="display:flex;justify-content:space-between"><span>'+x[0]+'</span><span style="color:'+c+'">'+n+' / '+x[1]+'</span></div><div style="height:6px;background:var(--bg);border-radius:9px"><div style="height:6px;border-radius:9px;background:'+c+';width:'+Math.min(100,n/x[1]*100)+'%"></div></div></div>'}).join('')}
+ $('#t',b).oninput=up;up();
+}},
+{id:'aspect-ratio',n:'Video Size & Aspect Ratio',i:'🎞️',c:'Creator',d:'Aspect ratios and the right sizes for each platform.',r(b){
+ const g=(a,z)=>z?g(z,a%z):a;
+ calc(b,[['Width',1920],['Height',1080],['Resize to width',1280]],v=>{const w=Math.round(v[0]),h=Math.round(v[1]),n=v[2];if(!(w>0)||!(h>0))return '–';const d=g(w,h);
+  return 'Aspect ratio: <b>'+w/d+':'+h/d+'</b>'+(n>0?'<br>At width '+n+' the height is <b>'+Math.round(n*h/w)+'</b>':'')+'<br><br><b>Common sizes</b><br>YouTube video: 1920×1080 (16:9)<br>Shorts / Reels / TikTok: 1080×1920 (9:16)<br>Instagram portrait post: 1080×1350 (4:5)<br>Square post: 1080×1080 (1:1)<br>YouTube thumbnail: 1280×720 (16:9)'});
+}},
+AI('ai-lesson','AI Lesson Plan Maker','📚','Build a ready-to-teach lesson plan with activities and a quick check.',
+ [['Topic and class','tp','area','e.g. Photosynthesis, Class 8 science',70],['Duration','du','select',['30 minutes','45 minutes','60 minutes','90 minutes']],['Style','sy','select',['Activity-based','Lecture with examples','Group work','Flipped classroom']]],
+ v=>'Create a lesson plan.\nTopic and class: '+v.tp+'\nDuration: '+v.du+'\nStyle: '+v.sy+'\nInclude: learning objectives, materials, a timed step-by-step plan, 2 activities, 3 check-for-understanding questions, and homework. Use markdown headings and bullets.',{md:1}),
+AI('ai-quiz','AI Quiz & Flashcard Maker','❓','Turn a topic or notes into quiz questions or flashcards.',
+ [['Topic or notes','tx','area','Paste notes or type a topic…',150],['Type','ty','select',['MCQ quiz with answers','Short-answer questions','Flashcards (Q → A)','True / False']],['How many','n','select',['5','10','15','20']],['Level','lv','select',['Easy','Medium','Hard','Mixed']]],
+ v=>'Make '+v.n+' items.\nType: '+v.ty+'\nLevel: '+v.lv+'\nBase them only on this topic or notes:\n'+v.tx+'\nGive an answer key at the end. Use markdown.',{md:1}),
+AI('ai-report','AI Business Report Writer','📊','Turn rough notes into a status update, summary or proposal.',
+ [['Rough notes or data points','tx','area','Paste bullet points, numbers, updates…',170],['Format','fm','select',['Weekly status update','Executive summary','Project report','Meeting follow-up','Performance review notes','Proposal outline']],['Audience','au','select',['Manager','Senior leadership','Client','Team']]],
+ v=>'Write a '+v.fm+' for this audience: '+v.au+'.\nUse only the facts below; do not invent numbers. Be concise, lead with the key message, end with next steps.\n\nNOTES:\n'+v.tx,{md:1}),
+AI('ai-sql','AI SQL & Formula Helper','🗄️','Describe what you need and get SQL, an Excel formula, pandas or a shell command.',
+ [['Describe what you need','tx','area','e.g. Total sales per month from table orders(date, amount)',110],['For','fr','select',['SQL (MySQL / PostgreSQL)','Excel / Google Sheets formula','Python pandas','Shell / Bash command']]],
+ v=>'Target: '+v.fr+'\nTask: '+v.tx+'\nGive the code in a fenced block, then a 2-3 line explanation and one edge case to watch. Ask no questions; state any assumption.',{md:1})
+];
+
+if(NOAI){for(let i=tools.length-1;i>=0;i--)if(tools[i].ai)tools.splice(i,1);tools.forEach(t=>{t.d=t.d.replace(', with Claude to plan steps','')})}
+/* ---------- ordering: recommended tiers, search ranking, favorites, recents ---------- */
+const TIERS=[
+ ['Top picks',['ask-claude','pdf-merge','ai-summarizer','ai-rewriter','ai-translator','image-compressor','images-to-pdf','pdf-split','qr-generator','notes','todo','word-counter']],
+ ['Everyday tools',['ai-email','ai-grammar','ai-explainer','image-converter','image-resizer','loan-emi-calculator','gst-calculator','sip-calculator','percentage-calculator','password-generator','unit-converter','age-calculator','pomodoro','case-converter','find-replace','pdf-rotate','pdf-watermark','csv-json','json-formatter','ai-meeting','ai-study','ai-resume','ai-script-writer','ai-hooks','ai-captions','compound-interest','bmi-calculator','discount-calculator','number-to-words','text-diff','line-tools']],
+ ['More tools',['ai-code','ai-regex','ai-blog','ai-prompt','teleprompter','srt-maker','script-timer','social-limits','date-difference','stopwatch-timer','bill-splitter','base64','url-encoder','hash-generator','uuid-generator','timestamp-converter','regex-tester','color-converter','contrast-checker','css-gradient','markdown-previewer','image-to-base64','lorem-ipsum','aspect-ratio']]
+];
+tools.forEach(t=>{t.tier=TIERS.length-1;t.ord=999;TIERS.forEach((g,gi)=>{const k=g[1].indexOf(t.id);if(k>-1){t.tier=gi;t.ord=k}})});
+tools.sort((a,b)=>a.tier-b.tier||a.ord-b.ord);
+tools.forEach((t,i)=>{t.rank=i});
+const byId=id=>tools.find(t=>t.id===id);
+const ROLES={
+'Student':{i:'🎓',t:['ai-study','ai-quiz','ai-summarizer','ai-explainer','ai-grammar','ai-translator','notes','todo','pomodoro','pdf-merge','images-to-pdf','word-counter','unit-converter','percentage-calculator','date-difference','stopwatch-timer','markdown-previewer']},
+'Teacher':{i:'🍎',t:['ai-lesson','ai-quiz','ai-study','ai-explainer','ai-email','ai-translator','ai-summarizer','ai-grammar','pdf-merge','pdf-split','pdf-watermark','images-to-pdf','qr-generator','notes','todo','pomodoro','stopwatch-timer','percentage-calculator','number-to-words']},
+'IT & Developer':{i:'💻',t:['ai-code','ai-sql','ai-regex','json-formatter','regex-tester','base64','url-encoder','hash-generator','uuid-generator','timestamp-converter','text-diff','csv-json','image-to-base64','password-generator','markdown-previewer','color-converter','css-gradient','contrast-checker','line-tools','find-replace','lorem-ipsum']},
+'Business & MNC':{i:'🏢',t:['ai-report','ai-email','ai-meeting','ai-summarizer','ai-translator','ai-rewriter','ai-resume','gst-calculator','loan-emi-calculator','sip-calculator','compound-interest','discount-calculator','percentage-calculator','number-to-words','bill-splitter','pdf-merge','pdf-split','pdf-watermark','date-difference','csv-json','notes','todo','pomodoro','qr-generator']},
+'Creator':{i:'🎬',t:['ai-script-writer','ai-hooks','ai-captions','ai-blog','ai-prompt','teleprompter','script-timer','srt-maker','social-limits','aspect-ratio','image-compressor','image-resizer','image-converter','qr-generator','color-converter','css-gradient','contrast-checker','ai-translator','notes']}
+};
+let role=st.get('role','All');if(!ROLES[role])role='All';
+const inRole=t=>role==='All'||ROLES[role].t.includes(t.id);
+const CATS=(NOAI?[]:['AI']).concat(['PDF','Image','Text','Creator','Productivity','Calculators','Developer','Convert','Generate','Design','Security']);
+let favs=st.get('fav',[]).filter(byId),recent=st.get('recent',[]).filter(byId),uses=st.get('uses',{});
+let cur='All',term='',sort=st.get('sort','smart');
+const isFav=id=>favs.indexOf(id)>-1;
+function toggleFav(id){favs=isFav(id)?favs.filter(x=>x!==id):favs.concat(id);st.set('fav',favs)}
+function bump(id){recent=[id].concat(recent.filter(x=>x!==id)).slice(0,8);uses[id]=(uses[id]||0)+1;st.set('recent',recent);st.set('uses',uses)}
+function score(t,q){q=q.toLowerCase().trim();if(!q)return 1;const n=t.n.toLowerCase(),h=(t.d+' '+t.c+(t.ai?' ai claude':'')).toLowerCase();let s=0;for(const w of q.split(/\s+/)){if(n.indexOf(w)===0)s+=4;else if(n.indexOf(w)>-1)s+=3;else if(h.indexOf(w)>-1)s+=1;else return 0}return s}
+
+/* ---------- views ---------- */
+const app=$('#app');
+function cell(t){
+ const c=el('div',{'class':'cell'}),a=el('a',{'class':'card',href:'#'+t.id});
+ a.innerHTML='<div class="ic">'+t.i+'</div><h3>'+t.n+'</h3><p>'+t.d+'</p><div class="meta"><span class="tag">'+t.c+'</span>'+(t.ai?'<span class="ai-b">✦ AI</span>':'')+'</div>';
+ const f=el('button',{'class':'fav'+(isFav(t.id)?' on':''),type:'button','aria-pressed':String(isFav(t.id)),'aria-label':(isFav(t.id)?'Unpin ':'Pin ')+t.n},isFav(t.id)?'★':'☆');
+ f.onclick=()=>{toggleFav(t.id);list()};
+ c.append(a,f);return c;
+}
+function home(){
+ app.innerHTML='<section class="hero"><h1>Every tool you need,<br><span>in one place.</span></h1><p id="hp"></p><input id="q" type="search" placeholder="Search tools…" autocomplete="off" aria-label="Search tools"><div class="chips" id="rl" role="group" aria-label="Who are you?"></div><div class="chips" id="ch" role="group" aria-label="Categories"></div></section><div class="toolbar"><label>Sort <select id="so" aria-label="Sort tools"><option value="smart">Recommended</option><option value="used">Most used</option><option value="az">A–Z</option><option value="cat">Category</option></select></label><span class="count" id="ct"></span></div><div id="sec"></div>';
+ const nai=tools.filter(t=>t.ai).length;
+ $('#hp').textContent=tools.length+' free tools: PDF and image tools, QR codes, calculators, notes'+(NOAI?' and more.':', and '+nai+' Claude-powered writing and study tools.')+' Press / to search.';
+ const q=$('#q');q.value=term;
+ const cnt=c=>tools.filter(t=>inRole(t)&&(c==='All'||(c==='AI'?t.ai:t.c===c))).length;
+ ['All'].concat(CATS).forEach(c=>{const x=el('button',{'class':'chip'+(c===cur?' on':''),type:'button','data-c':c});x.innerHTML=(c==='AI'?'✦ AI':c)+'<small>'+cnt(c)+'</small>';x.onclick=()=>{cur=c;Array.from($('#ch').children).forEach(y=>y.classList.toggle('on',y===x));list()};$('#ch').appendChild(x)});
+ ['All'].concat(Object.keys(ROLES)).forEach(r=>{const x=el('button',{'class':'chip'+(r===role?' on':''),type:'button','aria-pressed':String(r===role)});x.textContent=r==='All'?'👥 Everyone':ROLES[r].i+' '+r;x.onclick=()=>{role=r;st.set('role',r);home()};$('#rl').appendChild(x)});
+ const so=$('#so');so.value=sort;so.onchange=()=>{sort=so.value;st.set('sort',sort);list()};
+ q.oninput=()=>{term=q.value;list()};
+ q.onkeydown=e=>{if(e.key==='Enter'&&term.trim()){const r=tools.filter(t=>(cur==='All'||(cur==='AI'?t.ai:t.c===cur))&&score(t,term)>0).sort((a,b)=>score(b,term)-score(a,term)||a.rank-b.rank)[0];if(r)location.hash=r.id}};
+ list();
+}
+function list(){
+ const box=$('#sec'),ct=$('#ct');if(!box)return;box.innerHTML='';
+ const inCat=t=>(cur==='All'||(cur==='AI'?t.ai:t.c===cur))&&inRole(t),base=tools.filter(inCat);
+ const add=(title,items)=>{if(!items.length)return;const h=el('div',{'class':'sec-h'}),a=el('h2'),c=el('span'),g=el('div',{'class':'grid'});a.textContent=title;c.textContent=items.length;h.append(a,c);items.forEach(t=>g.appendChild(cell(t)));box.append(h,g)};
+ if(term.trim()){
+  const r=base.map(t=>[t,score(t,term)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]||a[0].rank-b[0].rank).map(x=>x[0]);
+  ct.textContent='';
+  if(!r.length){const e=el('div',{'class':'empty'}),p=el('div'),bt=el('button',{'class':'btn',type:'button'},'✦ Ask Claude about it');p.textContent='No tools match "'+term+'".';bt.onclick=()=>openChat(term,true);if(NOAI)e.append(p);else e.append(p,bt);box.appendChild(e);return}
+  add('Results',r);return;
+ }
+ ct.textContent=base.length+' tools';
+ if(cur==='All'){add('Pinned',favs.map(byId).filter(Boolean));add('Recently used',recent.map(byId).filter(Boolean).slice(0,6))}
+ if(role!=='All'&&cur==='All'&&sort==='smart')add(ROLES[role].i+' Best for '+role,ROLES[role].t.map(byId).filter(Boolean));else if(sort==='smart'){TIERS.forEach((g,gi)=>add(g[0],base.filter(t=>t.tier===gi)))}
+ else if(sort==='used'){
+  const tot=base.reduce((s,t)=>s+(uses[t.id]||0),0);
+  add('Most used',base.slice().sort((a,b)=>(uses[b.id]||0)-(uses[a.id]||0)||a.rank-b.rank));
+  if(!tot)ct.textContent=base.length+' tools · usage counts build as you open tools';
+ }
+ else if(sort==='az')add('A to Z',base.slice().sort((a,b)=>a.n.localeCompare(b.n)));
+ else CATS.forEach(c=>add(c==='AI'?'AI tools':c,base.filter(t=>t.c===c)));
+}
+function open(t){
+ bump(t.id);
+ app.innerHTML='<div class="thead"><button class="btn sec" id="bk" type="button">← All tools</button><span class="grow"></span><button class="btn sec" id="pin" type="button"></button></div><div class="panel"><h2 id="th"></h2><p class="sub" id="td"></p><div id="b"></div></div>';
+ $('#th').textContent=t.i+' '+t.n;$('#td').textContent=t.d;
+ const pin=$('#pin'),sp=()=>{pin.textContent=isFav(t.id)?'★ Pinned':'☆ Pin';pin.setAttribute('aria-pressed',String(isFav(t.id)))};
+ pin.onclick=()=>{toggleFav(t.id);sp()};sp();
+ $('#bk').onclick=()=>{location.hash=''};
+ try{t.r($('#b'))}catch(e){$('#b').textContent='This tool failed to load: '+e.message}
+}
+function focusQ(){const q=$('#q');if(q){q.focus();q.select()}}
+function goSearch(){if(page){location.hash='';setTimeout(focusQ,60)}else focusQ()}
+function route(){
+ const id=location.hash.slice(1),t=byId(id);page=t?t.id:'';
+ if(t)open(t);else home();
+ window.scrollTo(0,0);syncFab();
+}
+window.addEventListener('hashchange',route);
+$('#home').onclick=()=>{if(location.hash){location.hash=''}else{term='';cur='All';route()}};
+$('#askbtn').onclick=()=>{if(page==='ask-claude'){CH.view&&CH.view.inp.focus()}else if(drawer.hidden)showChat();else hideChat()};
+fab.onclick=()=>showChat();$('#dx').onclick=hideChat;backd.onclick=hideChat;
+const th=st.get('theme',null);if(th)document.documentElement.setAttribute('data-theme',th);
+$('#theme').onclick=()=>{const d=document.documentElement,dark=d.getAttribute('data-theme')==='dark'||(!d.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches),n=dark?'light':'dark';d.setAttribute('data-theme',n);st.set('theme',n)};
+document.addEventListener('keydown',e=>{
+ const tg=e.target,typing=tg&&(/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName)||tg.isContentEditable);
+ if(e.key==='Escape'){if(!drawer.hidden){hideChat();return}if(page&&!typing){location.hash=''}return}
+ if((e.key==='/'&&!typing&&!e.ctrlKey&&!e.metaKey&&!e.altKey)||((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k')){e.preventDefault();goSearch()}
+});
+route();
+})();
+</script>
+<div id="install-toast" role="status" hidden></div>
+<script>
+(function(){
+ var top_=window.self===window.top,btn=document.getElementById('install'),dp=null,tt=null;
+ var standalone=matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: window-controls-overlay)').matches||navigator.standalone===true;
+ var ua=navigator.userAgent,ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ var safari=/Safari/.test(ua)&&!/Chrome|Chromium|CriOS|FxiOS|Edg|OPR|Android/.test(ua);
+ function toast(t){var n=document.getElementById('install-toast');n.textContent=t;n.hidden=false;clearTimeout(tt);tt=setTimeout(function(){n.hidden=true},9000);n.onclick=function(){n.hidden=true}}
+ if(btn&&top_&&!standalone){
+  window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;btn.hidden=false});
+  window.addEventListener('appinstalled',function(){btn.hidden=true;dp=null});
+  if(safari)btn.hidden=false;
+  btn.addEventListener('click',function(){
+   if(dp){dp.prompt();dp.userChoice.then(function(){dp=null;btn.hidden=true},function(){})}
+   else if(ios)toast('To install: tap the Share button, then “Add to Home Screen”.');
+   else toast('To install: in Safari choose File → Add to Dock.');
+  });
+ }
+ var secure=location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1';
+ if('serviceWorker' in navigator&&top_&&secure){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})});
+ }
+})();
+</script>
+
+
+</body></html>
